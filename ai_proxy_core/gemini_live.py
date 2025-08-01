@@ -6,7 +6,7 @@ import asyncio
 import base64
 import json
 import logging
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Dict, Any, Callable, Union
 
 from google import genai
 from google.genai import types
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Default configuration
 DEFAULT_CONFIG = types.LiveConnectConfig(
-    response_modalities=["AUDIO"],
+    response_modalities=["AUDIO", "TEXT"],
     speech_config=types.SpeechConfig(
         voice_config=types.VoiceConfig(
             prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Zephyr")

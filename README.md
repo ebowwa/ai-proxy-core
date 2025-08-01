@@ -96,6 +96,24 @@ async def create_completion(request: CompletionRequest):
 - **Minimal surface area** - Just the core logic you need
 - **Easy testing** - Mock the handlers in your tests
 
+## Development
+
+### Building the Package
+
+When building the package for distribution, use `setup.py` directly instead of `python -m build` to avoid pip isolation issues:
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
+This will create both source distribution and wheel files in the `dist/` directory.
+
+### Publishing to PyPI
+
+```bash
+twine upload dist/*
+```
+
 ## License
 
 MIT

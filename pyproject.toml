@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-proxy-core"
+version = "0.1.2"
+authors = [
+    {name = "ebowwa", email = "your-email@example.com"},
+]
+description = "Minimal, reusable AI service handlers for Gemini and other LLMs"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "google-genai>=0.1.0",
+    "pillow>=10.0.0",
+]
+keywords = ["ai", "gemini", "llm", "api", "proxy"]
+
+[project.urls]
+Homepage = "https://github.com/ebowwa/ai-proxy-core"
+Repository = "https://github.com/ebowwa/ai-proxy-core"
+Issues = "https://github.com/ebowwa/ai-proxy-core/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "."}
+packages = ["ai_proxy_core"]
