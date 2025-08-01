@@ -42,16 +42,16 @@ print(response["choices"][0]["message"]["content"])
 ```python
 from ai_proxy_core import GeminiLiveSession
 
-# Create basic session
+# Example 1: Basic session (no system prompt)
 session = GeminiLiveSession(api_key="your-gemini-api-key")
 
-# Create session with system prompt (string)
+# Example 2: Session with system prompt (simple string format)
 session = GeminiLiveSession(
     api_key="your-gemini-api-key",
     system_instruction="You are a helpful voice assistant. Be concise and friendly."
 )
 
-# Create session with system prompt (Content object for more control)
+# Example 3: Session with system prompt (Content object for more control)
 from google.genai import types
 session = GeminiLiveSession(
     api_key="your-gemini-api-key",
