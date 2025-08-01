@@ -32,12 +32,18 @@ class GeminiLiveSession:
         api_key: Optional[str] = None,
         model: str = "models/gemini-2.0-flash-exp",
         config: Optional[types.LiveConnectConfig] = None,
-        system_instruction: Optional[Union[str, types.Content]] = None
+        system_instruction: Optional[Union[str, types.Content]] = None,
+        enable_code_execution: bool = False,
+        enable_google_search: bool = False,
+        custom_tools: Optional[list] = None
     ):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.model = model
         self.config = config or DEFAULT_CONFIG
         self.system_instruction = system_instruction
+        self.enable_code_execution = enable_code_execution
+        self.enable_google_search = enable_google_search
+        self.custom_tools = custom_tools or []
         self.session = None
         self.session_ctx = None  # Store context manager separately
         self.out_queue = None
@@ -58,6 +64,22 @@ class GeminiLiveSession:
             http_options={"api_version": "v1beta"},
             api_key=self.api_key,
         )
+    
+    def _build_tools(self) -> Optional[list]:
+        """Build tools configuration from enabled options"""
+        tools = []
+        
+        # Add built-in tools if enabled
+        if self.enable_code_execution:
+            tools.append(types.Tool(code_execution={}))
+        
+        if self.enable_google_search:
+            tools.append(types.Tool(google_search={}))
+            
+        # Add custom tools
+        tools.extend(self.custom_tools)
+        
+        return tools if tools else None
     
     async def send_to_gemini(self):
         """Send queued messages to Gemini"""
@@ -132,23 +154,29 @@ class GeminiLiveSession:
             # Initialize client and session
             client = self.get_client()
             
-            # Create config with system instruction if provided
+            # Build tools configuration
+            tools = self._build_tools()
+            
+            # Create config with system instruction and tools
             config = self.config
-            if self.system_instruction:
+            if self.system_instruction or tools:
                 # Convert string to Content object if needed
-                if isinstance(self.system_instruction, str):
-                    system_instruction_content = types.Content(
-                        parts=[types.Part.from_text(text=self.system_instruction)],
-                        role="user"
-                    )
-                else:
-                    system_instruction_content = self.system_instruction
+                system_instruction_content = None
+                if self.system_instruction:
+                    if isinstance(self.system_instruction, str):
+                        system_instruction_content = types.Content(
+                            parts=[types.Part.from_text(text=self.system_instruction)],
+                            role="user"
+                        )
+                    else:
+                        system_instruction_content = self.system_instruction
                 
-                # Create a new config with system instruction
+                # Create a new config with system instruction and tools
                 config = types.LiveConnectConfig(
                     response_modalities=self.config.response_modalities,
                     speech_config=self.config.speech_config,
-                    system_instruction=system_instruction_content
+                    system_instruction=system_instruction_content,
+                    tools=tools
                 )
             
             self.session_ctx = client.aio.live.connect(

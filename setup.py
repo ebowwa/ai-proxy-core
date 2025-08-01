@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ai-proxy-core",
-    version="0.1.0",
+    version="0.1.7",
     author="ebowwa",
     description="Minimal, reusable AI service handlers for Gemini and other LLMs",
     long_description=long_description,
