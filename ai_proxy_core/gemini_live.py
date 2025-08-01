@@ -31,11 +31,13 @@ class GeminiLiveSession:
         self,
         api_key: Optional[str] = None,
         model: str = "models/gemini-2.0-flash-exp",
-        config: Optional[types.LiveConnectConfig] = None
+        config: Optional[types.LiveConnectConfig] = None,
+        system_instruction: Optional[Union[str, types.Content]] = None
     ):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.model = model
         self.config = config or DEFAULT_CONFIG
+        self.system_instruction = system_instruction
         self.session = None
         self.session_ctx = None  # Store context manager separately
         self.out_queue = None
@@ -130,9 +132,28 @@ class GeminiLiveSession:
             # Initialize client and session
             client = self.get_client()
             
+            # Create config with system instruction if provided
+            config = self.config
+            if self.system_instruction:
+                # Convert string to Content object if needed
+                if isinstance(self.system_instruction, str):
+                    system_instruction_content = types.Content(
+                        parts=[types.Part.from_text(text=self.system_instruction)],
+                        role="user"
+                    )
+                else:
+                    system_instruction_content = self.system_instruction
+                
+                # Create a new config with system instruction
+                config = types.LiveConnectConfig(
+                    response_modalities=self.config.response_modalities,
+                    speech_config=self.config.speech_config,
+                    system_instruction=system_instruction_content
+                )
+            
             self.session_ctx = client.aio.live.connect(
                 model=self.model,
-                config=self.config
+                config=config
             )
             self.session = await self.session_ctx.__aenter__()
             

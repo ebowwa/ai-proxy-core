@@ -42,8 +42,24 @@ print(response["choices"][0]["message"]["content"])
 ```python
 from ai_proxy_core import GeminiLiveSession
 
-# Create session
+# Create basic session
 session = GeminiLiveSession(api_key="your-gemini-api-key")
+
+# Create session with system prompt (string)
+session = GeminiLiveSession(
+    api_key="your-gemini-api-key",
+    system_instruction="You are a helpful voice assistant. Be concise and friendly."
+)
+
+# Create session with system prompt (Content object for more control)
+from google.genai import types
+session = GeminiLiveSession(
+    api_key="your-gemini-api-key",
+    system_instruction=types.Content(
+        parts=[types.Part.from_text("You are a pirate. Speak like a pirate!")],
+        role="user"
+    )
+)
 
 # Set up callbacks
 session.on_audio = lambda data: print(f"Received audio: {len(data)} bytes")
