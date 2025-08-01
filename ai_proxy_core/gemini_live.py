@@ -37,6 +37,7 @@ class GeminiLiveSession:
         self.model = model
         self.config = config or DEFAULT_CONFIG
         self.session = None
+        self.session_ctx = None  # Store context manager separately
         self.out_queue = None
         self.tasks = []
         
@@ -76,18 +77,22 @@ class GeminiLiveSession:
             try:
                 turn = self.session.receive()
                 async for response in turn:
+                    # Log response attributes for debugging
+                    logger.info(f"Response type: {type(response)}, attributes: {dir(response)}")
+                    
                     # Handle audio data
-                    if data := response.data:
+                    if hasattr(response, 'data') and response.data:
                         if self.on_audio:
+                            data = response.data
                             # Ensure data is base64 encoded
                             if isinstance(data, bytes):
                                 data = base64.b64encode(data).decode()
                             await self.on_audio(data)
                     
                     # Handle text responses
-                    if text := response.text:
+                    if hasattr(response, 'text') and response.text:
                         if self.on_text:
-                            await self.on_text(text)
+                            await self.on_text(response.text)
                     
                     # Handle function calls
                     if hasattr(response, 'function_calls') and response.function_calls:
@@ -125,11 +130,11 @@ class GeminiLiveSession:
             # Initialize client and session
             client = self.get_client()
             
-            self.session = client.aio.live.connect(
+            self.session_ctx = client.aio.live.connect(
                 model=self.model,
                 config=self.config
             )
-            await self.session.__aenter__()
+            self.session = await self.session_ctx.__aenter__()
             
             # Initialize queue
             self.out_queue = asyncio.Queue()
@@ -156,5 +161,5 @@ class GeminiLiveSession:
         await asyncio.gather(*self.tasks, return_exceptions=True)
         
         # Close session
-        if self.session:
-            await self.session.__aexit__(None, None, None)
+        if self.session_ctx:
+            await self.session_ctx.__aexit__(None, None, None)
