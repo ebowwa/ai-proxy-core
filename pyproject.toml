@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-proxy-core"
-version = "0.1.7"
+version = "0.1.8"
 authors = [
     {name = "ebowwa", email = "your-email@example.com"},
 ]
