@@ -190,19 +190,34 @@ async def gemini_websocket(
 
 ## Development
 
-### Building the Package
+### Releasing New Versions
 
-When building the package for distribution, use `setup.py` directly instead of `python -m build` to avoid pip isolation issues:
+We provide an automated release script that handles version bumping, building, and publishing:
+
+```bash
+# Make the script executable (first time only)
+chmod +x release.sh
+
+# Release a new version
+./release.sh 0.1.9
+```
+
+The script will:
+1. Show current version and validate the new version format
+2. Prompt for a release description (for CHANGELOG)
+3. Update version in all necessary files (pyproject.toml, setup.py, __init__.py)
+4. Update CHANGELOG.md with your description
+5. Build the package
+6. Upload to PyPI
+7. Commit changes and create a git tag
+8. Push to GitHub with the new tag
+
+### Manual Build Process
+
+If you prefer to build manually:
 
 ```bash
 python setup.py sdist bdist_wheel
-```
-
-This will create both source distribution and wheel files in the `dist/` directory.
-
-### Publishing to PyPI
-
-```bash
 twine upload dist/*
 ```
 
