@@ -1,5 +1,6 @@
 # Changelog
 
+## [0.1.9.0] - 2025-08-03n- API migration to provider architecture completedn
 ## [0.1.9] - 2025-08-02
 - BREAKING: Refactor to provider-specific classes (GoogleCompletions, OpenAICompletions, OllamaCompletions)
 - Add multi-provider support with clean separation
