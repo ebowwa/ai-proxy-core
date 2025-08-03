@@ -11,7 +11,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ebowwa/ai-proxy-core",
-    packages=find_packages(),
+    packages=["ai_proxy_core", "ai_proxy_core.providers"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

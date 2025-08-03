@@ -60,4 +60,4 @@ all = [
 
 [tool.setuptools]
 package-dir = {"" = "."}
-packages = ["ai_proxy_core"]
+packages = ["ai_proxy_core", "ai_proxy_core.providers"]
