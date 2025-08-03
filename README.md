@@ -4,13 +4,17 @@ A minimal Python package providing reusable AI service handlers for Gemini and o
 
 ## Installation
 
+Basic (Google Gemini only):
 ```bash
 pip install ai-proxy-core
 ```
 
-With telemetry support:
+With specific providers:
 ```bash
-pip install "ai-proxy-core[telemetry]"
+pip install "ai-proxy-core[openai]"     # OpenAI support
+pip install "ai-proxy-core[anthropic]"  # Anthropic support (coming soon)
+pip install "ai-proxy-core[telemetry]"  # OpenTelemetry support
+pip install "ai-proxy-core[all]"        # Everything
 ```
 
 Or install from source:
@@ -18,29 +22,54 @@ Or install from source:
 git clone https://github.com/ebowwa/ai-proxy-core.git
 cd ai-proxy-core
 pip install -e .
-# With telemetry: pip install -e ".[telemetry]"
+# With all extras: pip install -e ".[all]"
 ```
 
 ## Usage
 
-### Completions Handler
+### Provider-Specific Completions
 
 ```python
-from ai_proxy_core import CompletionsHandler
+from ai_proxy_core import GoogleCompletions, OpenAICompletions, OllamaCompletions
 
-# Initialize handler
-handler = CompletionsHandler(api_key="your-gemini-api-key")
-
-# Create completion
-response = await handler.create_completion(
-    messages=[
-        {"role": "user", "content": "Hello, how are you?"}
-    ],
-    model="gemini-1.5-flash",
-    temperature=0.7
+# Google Gemini
+google = GoogleCompletions(api_key="your-gemini-api-key")  # or uses GEMINI_API_KEY env
+response = await google.create_completion(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="gemini-1.5-flash"
 )
 
+# OpenAI
+openai = OpenAICompletions(api_key="your-openai-key")  # or uses OPENAI_API_KEY env
+response = await openai.create_completion(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="gpt-4"
+)
+
+# Ollama (local)
+ollama = OllamaCompletions(base_url="http://localhost:11434")  # or uses OLLAMA_HOST env
+response = await ollama.create_completion(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="llama2"
+)
+
+# All return the same standardized format
 print(response["choices"][0]["message"]["content"])
+```
+
+### OpenAI-Compatible Endpoints
+
+```python
+# Works with any OpenAI-compatible API (Groq, Anyscale, Together, etc.)
+groq = OpenAICompletions(
+    api_key="your-groq-key",
+    base_url="https://api.groq.com/openai/v1"
+)
+
+response = await groq.create_completion(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="mixtral-8x7b-32768"
+)
 ```
 
 ### Gemini Live Session

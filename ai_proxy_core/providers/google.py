@@ -1,10 +1,9 @@
 """
-Completions Handler - Core logic without FastAPI dependencies
+Google (Gemini) completions provider
 """
 import os
 import base64
 import io
-import json
 import logging
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
@@ -13,50 +12,40 @@ import PIL.Image
 from google import genai
 from google.genai import types
 
-from .telemetry import get_telemetry
+from .base import BaseCompletions
+from ..telemetry import get_telemetry
 
 logger = logging.getLogger(__name__)
 
-# Model mapping for convenience
-MODEL_MAPPING = {
-    "gemini-2.0-flash": "models/gemini-2.0-flash-exp",
-    "gemini-1.5-flash": "models/gemini-1.5-flash",
-    "gemini-1.5-pro": "models/gemini-1.5-pro",
-    "gemini-pro": "models/gemini-pro",
-    "gemini-pro-vision": "models/gemini-pro-vision"
-}
 
-
-class CompletionsHandler:
-    """
-    DEPRECATED: Use GoogleCompletions, OpenAICompletions, or OllamaCompletions instead.
-    This class will be removed in v0.2.0.
-    """
+class GoogleCompletions(BaseCompletions):
+    """Google Gemini completions handler"""
+    
+    # Model mapping for convenience
+    MODEL_MAPPING = {
+        "gemini-2.0-flash": "models/gemini-2.0-flash-exp",
+        "gemini-1.5-flash": "models/gemini-1.5-flash",
+        "gemini-1.5-pro": "models/gemini-1.5-pro",
+        "gemini-pro": "models/gemini-pro",
+        "gemini-pro-vision": "models/gemini-pro-vision"
+    }
     
     def __init__(self, api_key: Optional[str] = None):
-        import warnings
-        warnings.warn(
-            "CompletionsHandler is deprecated. Use GoogleCompletions instead. "
-            "This class will be removed in v0.2.0.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-        self.client = None
-        self._initialize_client(api_key)
-        self.telemetry = get_telemetry()
-    
-    def _initialize_client(self, api_key: Optional[str] = None):
-        """Initialize client with API key"""
-        if not api_key:
-            api_key = os.environ.get("GEMINI_API_KEY")
+        """
+        Initialize Google Gemini client.
         
-        if api_key:
-            self.client = genai.Client(
-                http_options={"api_version": "v1beta"},
-                api_key=api_key,
-            )
-        else:
-            logger.warning("GEMINI_API_KEY not provided")
+        Args:
+            api_key: Optional API key. Falls back to GEMINI_API_KEY env var.
+        """
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        if not self.api_key:
+            raise ValueError("GEMINI_API_KEY not provided")
+            
+        self.client = genai.Client(
+            http_options={"api_version": "v1beta"},
+            api_key=self.api_key,
+        )
+        self.telemetry = get_telemetry()
     
     def _parse_content(self, content: Union[str, List[Dict[str, Any]]]) -> List[Any]:
         """Parse message content into Gemini-compatible format"""
@@ -93,54 +82,49 @@ class CompletionsHandler:
         safety_settings: Optional[List[Dict[str, str]]] = None,
         **kwargs
     ) -> Dict[str, Any]:
-        """
-        Create a completion from messages
-        Returns a dict that can be converted to any response format
-        """
-        if not self.client:
-            raise ValueError("Gemini client not initialized. Provide API key.")
+        """Create a completion from messages"""
         
         try:
             # Track request start
-            with self.telemetry.track_duration("completion", {"model": model, "provider": "gemini"}):
+            with self.telemetry.track_duration("completion", {"model": model, "provider": "google"}):
                 # Convert messages to Gemini format
                 contents = []
                 for msg in messages:
                     parts = self._parse_content(msg.get("content", ""))
                     role = "user" if msg.get("role") == "user" else "model"
                     contents.append({"role": role, "parts": parts})
-            
-            # Configure generation
-            config = types.GenerateContentConfig(
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-                system_instruction=system_instruction
-            )
-            
-            # Handle JSON response format
-            if isinstance(response_format, dict) and response_format.get("type") == "json_object":
-                config.response_mime_type = "application/json"
-            
-            # Add safety settings if provided
-            if safety_settings:
-                safety_config = []
-                for setting in safety_settings:
-                    safety_config.append(types.SafetySetting(
-                        category=setting.get("category"),
-                        threshold=setting.get("threshold", "BLOCK_MEDIUM_AND_ABOVE")
-                    ))
-                config.safety_settings = safety_config
-            
-            # Get model name
-            model_name = MODEL_MAPPING.get(model, f"models/{model}")
-            
-            # Generate response
-            response = await self.client.aio.models.generate_content(
-                model=model_name,
-                contents=contents,
-                config=config
-            )
-            
+                
+                # Configure generation
+                config = types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                    system_instruction=system_instruction
+                )
+                
+                # Handle JSON response format
+                if isinstance(response_format, dict) and response_format.get("type") == "json_object":
+                    config.response_mime_type = "application/json"
+                
+                # Add safety settings if provided
+                if safety_settings:
+                    safety_config = []
+                    for setting in safety_settings:
+                        safety_config.append(types.SafetySetting(
+                            category=setting.get("category"),
+                            threshold=setting.get("threshold", "BLOCK_MEDIUM_AND_ABOVE")
+                        ))
+                    config.safety_settings = safety_config
+                
+                # Get model name
+                model_name = self.MODEL_MAPPING.get(model, f"models/{model}")
+                
+                # Generate response
+                response = await self.client.aio.models.generate_content(
+                    model=model_name,
+                    contents=contents,
+                    config=config
+                )
+                
                 # Extract response content
                 response_content = ""
                 try:
@@ -160,7 +144,7 @@ class CompletionsHandler:
                 # Increment success counter
                 self.telemetry.request_counter.add(
                     1, 
-                    {"model": model, "status": "success", "provider": "gemini"}
+                    {"model": model, "status": "success", "provider": "google"}
                 )
                 
                 # Return standardized response
@@ -184,6 +168,10 @@ class CompletionsHandler:
             # Increment error counter
             self.telemetry.request_counter.add(
                 1, 
-                {"model": model, "status": "error", "provider": "gemini", "error_type": type(e).__name__}
+                {"model": model, "status": "error", "provider": "google", "error_type": type(e).__name__}
             )
             raise
+    
+    def list_models(self) -> List[str]:
+        """List available Gemini models"""
+        return list(self.MODEL_MAPPING.keys())

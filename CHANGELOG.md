@@ -1,10 +1,14 @@
 # Changelog
 
 ## [0.1.9] - 2025-08-02
+- BREAKING: Refactor to provider-specific classes (GoogleCompletions, OpenAICompletions, OllamaCompletions)
+- Add multi-provider support with clean separation
 - Add optional OpenTelemetry support for basic observability
-- Track request counts by model/status in CompletionsHandler
+- Track request counts by model/status across all providers
 - Track session duration for WebSocket connections
-- Add telemetry extra dependency for opt-in installation
+- Add OpenAI-compatible endpoint support (Groq, Anyscale, etc.)
+- Deprecate CompletionsHandler in favor of provider-specific classes
+- Add optional dependencies for different providers
 
 ## [0.1.8] - 2025-08-02
 - Add built-in tool support (code_execution, google_search) for Gemini Live
