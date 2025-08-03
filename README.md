@@ -319,6 +319,14 @@ export OTEL_ENDPOINT=localhost:4317  # for OTLP exporter
 
 The telemetry is completely optional and has zero overhead when disabled.
 
+## Project Structure
+
+> 📝 **Note:** Full documentation of the project structure is being tracked in [Issue #12](https://github.com/ebowwa/ai-proxy-core/issues/12)
+
+This project serves dual purposes:
+- **Python Library** (`/ai_proxy_core`): Installable via pip for use in Python applications
+- **Web Service** (`/api`): FastAPI endpoints for REST API access
+
 ## Development
 
 ### Releasing New Versions
