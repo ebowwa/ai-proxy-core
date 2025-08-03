@@ -1,22 +1,16 @@
 """
 Unified completions API - Single endpoint for all AI completions
-Clean, minimal implementation without business logic
+Routes to appropriate provider based on model
 """
 import os
-import base64
-import io
-import json
 import logging
 from typing import Optional, List, Dict, Any, Union
-from datetime import datetime
 
-import PIL.Image
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Query
 
-from google import genai
-from google.genai import types
+from datetime import datetime
+from ai_proxy_core.providers import GoogleCompletions, OpenAICompletions, OllamaCompletions
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -24,13 +18,24 @@ logger = logging.getLogger(__name__)
 # Initialize router
 router = APIRouter()
 
-# Model mapping for convenience
-MODEL_MAPPING = {
-    "gemini-2.0-flash": "models/gemini-2.0-flash-exp",
-    "gemini-1.5-flash": "models/gemini-1.5-flash",
-    "gemini-1.5-pro": "models/gemini-1.5-pro",
-    "gemini-pro": "models/gemini-pro",
-    "gemini-pro-vision": "models/gemini-pro-vision"
+# Model to provider mapping
+MODEL_PROVIDERS = {
+    # OpenAI models
+    "gpt-4": "openai",
+    "gpt-4-turbo": "openai",
+    "gpt-3.5-turbo": "openai",
+    
+    # Google models
+    "gemini-1.5-flash": "google",
+    "gemini-1.5-pro": "google",
+    "gemini-2.0-flash": "google",
+    "gemini-pro": "google",
+    
+    # Ollama models
+    "llama2": "ollama",
+    "mistral": "ollama",
+    "codellama": "ollama",
+    "mixtral": "ollama",
 }
 
 
@@ -64,124 +69,86 @@ class CompletionResponse(BaseModel):
 
 
 class CompletionsHandler:
-    """Minimal completions handler"""
+    """Multi-provider completions handler"""
     
     def __init__(self):
-        self.client = None
-        self._initialize_client()
+        self.providers = {}
+        self._initialize_providers()
     
-    def _initialize_client(self):
-        """Initialize client if API key is available"""
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if api_key:
-            self.client = genai.Client(
-                http_options={"api_version": "v1beta"},
-                api_key=api_key,
-            )
-        else:
-            logger.warning("GEMINI_API_KEY not found in environment variables")
+    def _initialize_providers(self):
+        """Initialize available providers based on environment"""
+        # Google provider
+        if os.environ.get("GEMINI_API_KEY"):
+            try:
+                self.providers["google"] = GoogleCompletions()
+            except Exception as e:
+                logger.warning(f"Could not initialize Google provider: {e}")
+        
+        # OpenAI provider
+        if os.environ.get("OPENAI_API_KEY"):
+            try:
+                self.providers["openai"] = OpenAICompletions()
+            except Exception as e:
+                logger.warning(f"Could not initialize OpenAI provider: {e}")
+        
+        # Ollama provider (always available for local)
+        try:
+            self.providers["ollama"] = OllamaCompletions()
+        except Exception as e:
+            logger.warning(f"Could not initialize Ollama provider: {e}")
+        
+        if not self.providers:
+            logger.error("No providers available. Set API keys in environment.")
     
-    def _parse_content(self, content: Union[str, List[Dict[str, Any]]]) -> List[Any]:
-        """Parse message content into Gemini-compatible format"""
-        if isinstance(content, str):
-            return [content]
+    def _get_provider_for_model(self, model: str):
+        """Determine provider from model name"""
+        # Check explicit mapping
+        if model in MODEL_PROVIDERS:
+            return MODEL_PROVIDERS[model]
         
-        parts = []
-        for item in content:
-            if item["type"] == "text":
-                parts.append(item["text"])
-            elif item["type"] == "image_url":
-                # Handle base64 or URL images
-                image_data = item["image_url"]["url"]
-                if image_data.startswith("data:"):
-                    # Extract base64 data
-                    base64_data = image_data.split(",")[1]
-                    image_bytes = base64.b64decode(base64_data)
-                    image = PIL.Image.open(io.BytesIO(image_bytes))
-                    parts.append(image)
-                else:
-                    # Handle URL
-                    parts.append({"mime_type": "image/jpeg", "data": image_data})
-            # Add more content types as needed
+        # Pattern matching
+        if model.startswith("gpt"):
+            return "openai"
+        elif "gemini" in model.lower():
+            return "google"
+        elif model.startswith("claude"):
+            return "anthropic"
         
-        return parts
+        # Default to ollama for unknown models (might be local)
+        return "ollama"
+    
     
     async def create_completion(self, request: CompletionRequest) -> CompletionResponse:
-        """Create a completion from messages"""
-        if not self.client:
+        """Create a completion from messages - routes to appropriate provider"""
+        # Determine provider
+        provider_name = self._get_provider_for_model(request.model)
+        
+        if provider_name not in self.providers:
             raise HTTPException(
-                status_code=500, 
-                detail="GEMINI_API_KEY not configured. Please set it in your environment variables."
+                status_code=500,
+                detail=f"Provider '{provider_name}' not available for model '{request.model}'. "
+                       f"Available providers: {list(self.providers.keys())}"
             )
         
+        provider = self.providers[provider_name]
+        
         try:
-            # Convert messages to Gemini format
-            contents = []
-            for msg in request.messages:
-                parts = self._parse_content(msg.content)
-                role = "user" if msg.role == "user" else "model"
-                contents.append({"role": role, "parts": parts})
+            # Convert messages to dict format for provider
+            messages = [msg.dict() for msg in request.messages]
             
-            # Configure generation
-            config = types.GenerateContentConfig(
-                temperature=request.temperature,
-                max_output_tokens=request.max_tokens,
-                system_instruction=request.system_instruction
-            )
-            
-            # Handle JSON response format
-            if isinstance(request.response_format, dict) and request.response_format.get("type") == "json_object":
-                config.response_mime_type = "application/json"
-            
-            # Add safety settings if provided
-            if request.safety_settings:
-                safety_config = []
-                for setting in request.safety_settings:
-                    safety_config.append(types.SafetySetting(
-                        category=setting.get("category"),
-                        threshold=setting.get("threshold", "BLOCK_MEDIUM_AND_ABOVE")
-                    ))
-                config.safety_settings = safety_config
-            
-            # Get model name
-            model_name = MODEL_MAPPING.get(request.model, f"models/{request.model}")
-            
-            # Generate response
-            response = await self.client.aio.models.generate_content(
-                model=model_name,
-                contents=contents,
-                config=config
-            )
-            
-            # Extract response content
-            response_content = ""
-            try:
-                if hasattr(response, 'text') and response.text:
-                    response_content = response.text
-                elif hasattr(response, 'candidates') and response.candidates:
-                    candidate = response.candidates[0]
-                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
-                        for part in candidate.content.parts:
-                            if hasattr(part, 'text') and part.text:
-                                response_content = part.text
-                                break
-            except Exception as e:
-                logger.error(f"Error extracting response: {e}")
-                response_content = str(e)
-            
-            return CompletionResponse(
-                id=f"comp-{datetime.now().timestamp()}",
-                created=int(datetime.now().timestamp()),
+            # Call provider's create_completion method
+            result = await provider.create_completion(
+                messages=messages,
                 model=request.model,
-                choices=[{
-                    "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": response_content
-                    },
-                    "finish_reason": "stop"
-                }]
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+                response_format=request.response_format,
+                system_instruction=request.system_instruction,
+                safety_settings=request.safety_settings
             )
+            
+            # Convert result dict to CompletionResponse
+            return CompletionResponse(**result)
             
         except Exception as e:
             logger.error(f"Completion error: {e}")

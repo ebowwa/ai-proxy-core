@@ -141,43 +141,43 @@ class CompletionsHandler:
                 config=config
             )
             
-                # Extract response content
-                response_content = ""
-                try:
-                    if hasattr(response, 'text') and response.text:
-                        response_content = response.text
-                    elif hasattr(response, 'candidates') and response.candidates:
-                        candidate = response.candidates[0]
-                        if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
-                            for part in candidate.content.parts:
-                                if hasattr(part, 'text') and part.text:
-                                    response_content = part.text
-                                    break
-                except Exception as e:
-                    logger.error(f"Error extracting response: {e}")
-                    response_content = str(e)
-                
-                # Increment success counter
-                self.telemetry.request_counter.add(
-                    1, 
-                    {"model": model, "status": "success", "provider": "gemini"}
-                )
-                
-                # Return standardized response
-                return {
-                    "id": f"comp-{datetime.now().timestamp()}",
-                    "created": int(datetime.now().timestamp()),
-                    "model": model,
-                    "choices": [{
-                        "index": 0,
-                        "message": {
-                            "role": "assistant",
-                            "content": response_content
-                        },
-                        "finish_reason": "stop"
-                    }],
-                    "usage": None  # Could be extracted if needed
-                }
+            # Extract response content
+            response_content = ""
+            try:
+                if hasattr(response, 'text') and response.text:
+                    response_content = response.text
+                elif hasattr(response, 'candidates') and response.candidates:
+                    candidate = response.candidates[0]
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'text') and part.text:
+                                response_content = part.text
+                                break
+            except Exception as e:
+                logger.error(f"Error extracting response: {e}")
+                response_content = str(e)
+            
+            # Increment success counter
+            self.telemetry.request_counter.add(
+                1, 
+                {"model": model, "status": "success", "provider": "gemini"}
+            )
+            
+            # Return standardized response
+            return {
+                "id": f"comp-{datetime.now().timestamp()}",
+                "created": int(datetime.now().timestamp()),
+                "model": model,
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": response_content
+                    },
+                    "finish_reason": "stop"
+                }],
+                "usage": None  # Could be extracted if needed
+            }
             
         except Exception as e:
             logger.error(f"Completion error: {e}")
