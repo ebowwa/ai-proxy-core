@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ai-proxy-core",
-    version="0.1.8",
+    version="0.1.9",
     author="ebowwa",
     description="Minimal, reusable AI service handlers for Gemini and other LLMs",
     long_description=long_description,
@@ -21,13 +21,29 @@ setup(
     install_requires=[
         "google-genai>=0.1.0",
         "pillow>=10.0.0",
+        "aiohttp>=3.8.0",  # For Ollama
     ],
     extras_require={
         "dev": [
             "pytest>=7.0.0",
             "pytest-asyncio>=0.21.0",
+            "build>=0.10.0",
+            "twine>=4.0.0",
         ],
         "telemetry": [
+            "opentelemetry-api>=1.20.0",
+            "opentelemetry-sdk>=1.20.0",
+            "opentelemetry-exporter-otlp>=1.20.0",
+        ],
+        "openai": [
+            "openai>=1.0.0",
+        ],
+        "anthropic": [
+            "anthropic>=0.18.0",
+        ],
+        "all": [
+            "openai>=1.0.0",
+            "anthropic>=0.18.0",
             "opentelemetry-api>=1.20.0",
             "opentelemetry-sdk>=1.20.0",
             "opentelemetry-exporter-otlp>=1.20.0",
