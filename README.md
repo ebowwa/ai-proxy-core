@@ -8,11 +8,17 @@ A minimal Python package providing reusable AI service handlers for Gemini and o
 pip install ai-proxy-core
 ```
 
+With telemetry support:
+```bash
+pip install "ai-proxy-core[telemetry]"
+```
+
 Or install from source:
 ```bash
 git clone https://github.com/ebowwa/ai-proxy-core.git
 cd ai-proxy-core
 pip install -e .
+# With telemetry: pip install -e ".[telemetry]"
 ```
 
 ## Usage
@@ -187,6 +193,28 @@ async def gemini_websocket(
 - **Reusable design** - Tools configured by consumers, not hardcoded
 - **WebSocket support** - Real-time audio/text streaming with Gemini Live
 - **Callback system** - Handle responses with custom callbacks
+- **Optional telemetry** - OpenTelemetry integration for production monitoring
+
+### Telemetry
+
+Basic observability with OpenTelemetry (optional):
+
+```python
+# Install with: pip install "ai-proxy-core[telemetry]"
+
+# Enable telemetry via environment variables
+export OTEL_ENABLED=true
+export OTEL_EXPORTER_TYPE=console  # or "otlp" for production
+export OTEL_ENDPOINT=localhost:4317  # for OTLP exporter
+
+# Automatic telemetry for:
+# - Request counts by model/status
+# - Request latency tracking
+# - Session duration for WebSockets
+# - Error tracking with types
+```
+
+The telemetry is completely optional and has zero overhead when disabled.
 
 ## Development
 

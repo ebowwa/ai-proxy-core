@@ -26,6 +26,11 @@ setup(
         "dev": [
             "pytest>=7.0.0",
             "pytest-asyncio>=0.21.0",
+        ],
+        "telemetry": [
+            "opentelemetry-api>=1.20.0",
+            "opentelemetry-sdk>=1.20.0",
+            "opentelemetry-exporter-otlp>=1.20.0",
         ]
     }
 )

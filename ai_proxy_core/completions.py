@@ -13,6 +13,8 @@ import PIL.Image
 from google import genai
 from google.genai import types
 
+from .telemetry import get_telemetry
+
 logger = logging.getLogger(__name__)
 
 # Model mapping for convenience
@@ -31,6 +33,7 @@ class CompletionsHandler:
     def __init__(self, api_key: Optional[str] = None):
         self.client = None
         self._initialize_client(api_key)
+        self.telemetry = get_telemetry()
     
     def _initialize_client(self, api_key: Optional[str] = None):
         """Initialize client with API key"""
@@ -88,12 +91,14 @@ class CompletionsHandler:
             raise ValueError("Gemini client not initialized. Provide API key.")
         
         try:
-            # Convert messages to Gemini format
-            contents = []
-            for msg in messages:
-                parts = self._parse_content(msg.get("content", ""))
-                role = "user" if msg.get("role") == "user" else "model"
-                contents.append({"role": role, "parts": parts})
+            # Track request start
+            with self.telemetry.track_duration("completion", {"model": model, "provider": "gemini"}):
+                # Convert messages to Gemini format
+                contents = []
+                for msg in messages:
+                    parts = self._parse_content(msg.get("content", ""))
+                    role = "user" if msg.get("role") == "user" else "model"
+                    contents.append({"role": role, "parts": parts})
             
             # Configure generation
             config = types.GenerateContentConfig(
@@ -126,38 +131,49 @@ class CompletionsHandler:
                 config=config
             )
             
-            # Extract response content
-            response_content = ""
-            try:
-                if hasattr(response, 'text') and response.text:
-                    response_content = response.text
-                elif hasattr(response, 'candidates') and response.candidates:
-                    candidate = response.candidates[0]
-                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
-                        for part in candidate.content.parts:
-                            if hasattr(part, 'text') and part.text:
-                                response_content = part.text
-                                break
-            except Exception as e:
-                logger.error(f"Error extracting response: {e}")
-                response_content = str(e)
-            
-            # Return standardized response
-            return {
-                "id": f"comp-{datetime.now().timestamp()}",
-                "created": int(datetime.now().timestamp()),
-                "model": model,
-                "choices": [{
-                    "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": response_content
-                    },
-                    "finish_reason": "stop"
-                }],
-                "usage": None  # Could be extracted if needed
-            }
+                # Extract response content
+                response_content = ""
+                try:
+                    if hasattr(response, 'text') and response.text:
+                        response_content = response.text
+                    elif hasattr(response, 'candidates') and response.candidates:
+                        candidate = response.candidates[0]
+                        if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                            for part in candidate.content.parts:
+                                if hasattr(part, 'text') and part.text:
+                                    response_content = part.text
+                                    break
+                except Exception as e:
+                    logger.error(f"Error extracting response: {e}")
+                    response_content = str(e)
+                
+                # Increment success counter
+                self.telemetry.request_counter.add(
+                    1, 
+                    {"model": model, "status": "success", "provider": "gemini"}
+                )
+                
+                # Return standardized response
+                return {
+                    "id": f"comp-{datetime.now().timestamp()}",
+                    "created": int(datetime.now().timestamp()),
+                    "model": model,
+                    "choices": [{
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": response_content
+                        },
+                        "finish_reason": "stop"
+                    }],
+                    "usage": None  # Could be extracted if needed
+                }
             
         except Exception as e:
             logger.error(f"Completion error: {e}")
+            # Increment error counter
+            self.telemetry.request_counter.add(
+                1, 
+                {"model": model, "status": "error", "provider": "gemini", "error_type": type(e).__name__}
+            )
             raise

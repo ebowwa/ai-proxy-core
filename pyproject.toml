@@ -38,6 +38,11 @@ dev = [
     "build>=0.10.0",
     "twine>=4.0.0",
 ]
+telemetry = [
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp>=1.20.0",
+]
 
 [tool.setuptools]
 package-dir = {"" = "."}

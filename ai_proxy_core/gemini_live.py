@@ -6,10 +6,13 @@ import asyncio
 import base64
 import json
 import logging
+import time
 from typing import Optional, Dict, Any, Callable, Union
 
 from google import genai
 from google.genai import types
+
+from .telemetry import get_telemetry
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +51,8 @@ class GeminiLiveSession:
         self.session_ctx = None  # Store context manager separately
         self.out_queue = None
         self.tasks = []
+        self.session_start_time = None
+        self.telemetry = get_telemetry()
         
         # Callbacks for handling responses
         self.on_audio: Optional[Callable] = None
@@ -192,6 +197,9 @@ class GeminiLiveSession:
             self.tasks.append(asyncio.create_task(self.send_to_gemini()))
             self.tasks.append(asyncio.create_task(self.receive_from_gemini()))
             
+            # Track session start time
+            self.session_start_time = time.time()
+            
         except Exception as e:
             logger.error(f"Failed to start session: {e}")
             if self.on_error:
@@ -200,6 +208,21 @@ class GeminiLiveSession:
     
     async def stop(self):
         """Stop the session and clean up"""
+        # Record session duration if session was started
+        if self.session_start_time:
+            session_duration_ms = (time.time() - self.session_start_time) * 1000
+            session_attributes = {
+                "model": self.model,
+                "has_tools": bool(self._build_tools()),
+                "has_system_instruction": bool(self.system_instruction)
+            }
+            self.telemetry.record_duration(
+                "gemini_live_session",
+                session_duration_ms,
+                session_attributes
+            )
+            logger.info(f"Session ended. Duration: {session_duration_ms:.2f}ms")
+        
         # Stop queue processing
         if self.out_queue:
             await self.out_queue.put(None)

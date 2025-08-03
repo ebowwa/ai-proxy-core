@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.1.8] - 2025-08-02n- n
+## [0.1.9] - 2025-08-02
+- Add optional OpenTelemetry support for basic observability
+- Track request counts by model/status in CompletionsHandler
+- Track session duration for WebSocket connections
+- Add telemetry extra dependency for opt-in installation
+
 ## [0.1.8] - 2025-08-02
 - Add built-in tool support (code_execution, google_search) for Gemini Live
 - Add custom_tools parameter for user-defined function declarations
