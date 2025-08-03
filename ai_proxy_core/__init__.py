@@ -10,7 +10,7 @@ from .providers import (
     BaseCompletions
 )
 
-__version__ = "0.1.9.0"
+__version__ = "0.1.10"
 __all__ = [
     # Legacy (will deprecate)
     "CompletionsHandler",
