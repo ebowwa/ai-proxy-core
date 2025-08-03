@@ -5,7 +5,7 @@ Run with: OTEL_EXPORTER_TYPE=console python test_telemetry.py
 """
 import asyncio
 import os
-from ai_proxy_core import CompletionsHandler, GeminiLiveSession
+from ai_proxy_core import CompletionClient, GeminiLiveSession
 
 # Set console exporter for testing
 os.environ["OTEL_EXPORTER_TYPE"] = "console"
@@ -16,11 +16,11 @@ async def test_completions_telemetry():
     """Test request counting for completions"""
     print("\n=== Testing Completions Telemetry ===")
     
-    handler = CompletionsHandler()
+    client = CompletionClient()
     
     # Test successful request
     try:
-        response = await handler.create_completion(
+        response = await client.create_completion(
             messages=[{"role": "user", "content": "Say hello in 3 words"}],
             model="gemini-1.5-flash",
             max_tokens=50
@@ -31,7 +31,7 @@ async def test_completions_telemetry():
     
     # Test error case (invalid model)
     try:
-        await handler.create_completion(
+        await client.create_completion(
             messages=[{"role": "user", "content": "Test"}],
             model="invalid-model-xyz"
         )

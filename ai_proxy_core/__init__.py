@@ -2,6 +2,7 @@
 AI Proxy Core - Reusable AI service handlers
 """
 from .completions import CompletionsHandler  # Keeping for backward compatibility warning
+from .completion_client import CompletionClient
 from .gemini_live import GeminiLiveSession
 from .models import ModelInfo, ModelProvider, ModelManager
 from .providers import (
@@ -14,10 +15,13 @@ from .providers import (
     GeminiModelProvider
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = [
     # Legacy (will deprecate)
     "CompletionsHandler",
+    
+    # Unified completion interface
+    "CompletionClient",
     
     # Current
     "GeminiLiveSession",
