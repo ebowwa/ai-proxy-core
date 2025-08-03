@@ -2,6 +2,8 @@
 
 A unified Python package providing a single interface for AI completions across multiple providers (OpenAI, Gemini, Ollama). Features intelligent model management, automatic provider routing, and zero-config setup.
 
+> 💡 **Why not LangChain?** Read our [philosophy and architectural rationale](https://github.com/ebowwa/ai-proxy-core/issues/13) for choosing simplicity over complexity.
+
 ## Installation
 
 Basic (Google Gemini only):
