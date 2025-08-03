@@ -1,6 +1,6 @@
 # AI Proxy Core
 
-A minimal Python package providing reusable AI service handlers for Gemini and other LLMs. No web framework dependencies - just the core logic.
+A unified Python package providing a single interface for AI completions across multiple providers (OpenAI, Gemini, Ollama). Features intelligent model management, automatic provider routing, and zero-config setup.
 
 ## Installation
 
@@ -25,36 +25,96 @@ pip install -e .
 # With all extras: pip install -e ".[all]"
 ```
 
-## Usage
+## Quick Start
 
-### Provider-Specific Completions
+### Unified Interface (Recommended)
 
 ```python
-from ai_proxy_core import GoogleCompletions, OpenAICompletions, OllamaCompletions
+from ai_proxy_core import CompletionClient
 
-# Google Gemini
-google = GoogleCompletions(api_key="your-gemini-api-key")  # or uses GEMINI_API_KEY env
-response = await google.create_completion(
+# Single client for all providers
+client = CompletionClient()
+
+# Works with any model - auto-detects provider
+response = await client.create_completion(
     messages=[{"role": "user", "content": "Hello!"}],
-    model="gemini-1.5-flash"
+    model="gpt-4"  # Auto-routes to OpenAI
 )
 
-# OpenAI
-openai = OpenAICompletions(api_key="your-openai-key")  # or uses OPENAI_API_KEY env
-response = await openai.create_completion(
+response = await client.create_completion(
     messages=[{"role": "user", "content": "Hello!"}],
-    model="gpt-4"
+    model="gemini-1.5-flash"  # Auto-routes to Gemini
 )
 
-# Ollama (local)
-ollama = OllamaCompletions(base_url="http://localhost:11434")  # or uses OLLAMA_HOST env
-response = await ollama.create_completion(
+response = await client.create_completion(
     messages=[{"role": "user", "content": "Hello!"}],
-    model="llama2"
+    model="llama2"  # Auto-routes to Ollama
 )
 
 # All return the same standardized format
 print(response["choices"][0]["message"]["content"])
+```
+
+### Intelligent Model Selection
+
+```python
+# Find the best model for your needs
+best_model = await client.find_best_model({
+    "multimodal": True,
+    "min_context_limit": 32000,
+    "local_preferred": False
+})
+
+response = await client.create_completion(
+    messages=[{"role": "user", "content": "Describe this image"}],
+    model=best_model["id"]
+)
+```
+
+### Model Discovery
+
+```python
+# List all available models across providers
+models = await client.list_models()
+for model in models:
+    print(f"{model['id']} ({model['provider']}) - {model['context_limit']:,} tokens")
+
+# List models from specific provider
+openai_models = await client.list_models(provider="openai")
+```
+
+## Advanced Usage
+
+### Provider-Specific Completions
+
+If you need provider-specific features, you can still use the individual clients:
+
+```python
+from ai_proxy_core import GoogleCompletions, OpenAICompletions, OllamaCompletions
+
+# Google Gemini with safety settings
+google = GoogleCompletions(api_key="your-gemini-api-key")
+response = await google.create_completion(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="gemini-1.5-flash",
+    safety_settings=[{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"}]
+)
+
+# OpenAI with tool calling
+openai = OpenAICompletions(api_key="your-openai-key")
+response = await openai.create_completion(
+    messages=[{"role": "user", "content": "What's the weather?"}],
+    model="gpt-4",
+    tools=[{"type": "function", "function": {"name": "get_weather"}}]
+)
+
+# Ollama with streaming
+ollama = OllamaCompletions(base_url="http://localhost:11434")
+response = await ollama.create_completion(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="llama2",
+    stream=True
+)
 ```
 
 ### OpenAI-Compatible Endpoints
@@ -146,10 +206,10 @@ await session.stop()
 ```python
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from ai_proxy_core import CompletionsHandler
+from ai_proxy_core import CompletionClient
 
 app = FastAPI()
-handler = CompletionsHandler()
+client = CompletionClient()
 
 class CompletionRequest(BaseModel):
     messages: list
@@ -159,7 +219,7 @@ class CompletionRequest(BaseModel):
 @app.post("/api/chat/completions")
 async def create_completion(request: CompletionRequest):
     try:
-        response = await handler.create_completion(
+        response = await client.create_completion(
             messages=request.messages,
             model=request.model,
             temperature=request.temperature
@@ -212,17 +272,31 @@ async def gemini_websocket(
 
 ## Features
 
+### 🚀 **Unified Interface**
+- **Single client for all providers** - No more provider-specific code
+- **Automatic provider routing** - Detects provider from model name
+- **Intelligent model selection** - Find best model based on requirements
+- **Zero-config setup** - Auto-detects available providers from environment
+
+### 🧠 **Model Management**
+- **Cross-provider model discovery** - List models from OpenAI, Gemini, Ollama
+- **Rich model metadata** - Context limits, capabilities, multimodal support
+- **Automatic model provisioning** - Downloads Ollama models as needed
+- **Model compatibility checking** - Ensures models support requested features
+
+### 🔧 **Developer Experience**
 - **No framework dependencies** - Use with FastAPI, Flask, or any Python app
 - **Async/await support** - Modern async Python
 - **Type hints** - Full type annotations
-- **Minimal surface area** - Just the core logic you need
-- **Easy testing** - Mock the handlers in your tests
+- **Easy testing** - Mock the unified client in your tests
+- **Backward compatible** - All existing provider-specific code continues to work
+
+### 🎯 **Advanced Features**
+- **WebSocket support** - Real-time audio/text streaming with Gemini Live
 - **Built-in tools** - Code execution and Google Search with simple flags
 - **Custom functions** - Add your own function declarations
-- **Reusable design** - Tools configured by consumers, not hardcoded
-- **WebSocket support** - Real-time audio/text streaming with Gemini Live
-- **Callback system** - Handle responses with custom callbacks
 - **Optional telemetry** - OpenTelemetry integration for production monitoring
+- **Provider-specific optimizations** - Access advanced features when needed
 
 ### Telemetry
 
