@@ -4,6 +4,8 @@ A unified Python package providing a single interface for AI completions across 
 
 > 💡 **Why not LangChain?** Read our [philosophy and architectural rationale](https://github.com/ebowwa/ai-proxy-core/issues/13) for choosing simplicity over complexity.
 
+> 🎯 **What's Next?** See our [wrapper layer roadmap](https://github.com/ebowwa/ai-proxy-core/issues/14) for planned features and what belongs in a clean LLM wrapper.
+
 ## Installation
 
 Basic (Google Gemini only):
