@@ -54,7 +54,21 @@ class CompletionsHandler:
     """FastAPI wrapper for unified CompletionClient"""
     
     def __init__(self):
-        self.client = CompletionClient()
+        # Check if secure storage should be enabled
+        use_secure = os.environ.get("USE_SECURE_STORAGE", "false").lower() == "true"
+        self.client = CompletionClient(use_secure_storage=use_secure)
+        
+        # TODO: Initialize authentication when security module is complete
+        # self.auth_enabled = os.environ.get("REQUIRE_AUTH", "false").lower() == "true"
+        # self.auth = None
+        # if self.auth_enabled:
+        #     try:
+        #         from ai_proxy_core.security import APIGatewayAuth
+        #         self.auth = APIGatewayAuth()
+        #         logger.info("API authentication enabled")
+        #     except ImportError:
+        #         logger.warning("Auth requested but security module not available")
+        #         self.auth_enabled = False
     
     async def create_completion(self, request: CompletionRequest) -> CompletionResponse:
         """Create a completion from messages - delegates to CompletionClient"""
@@ -100,4 +114,29 @@ def get_handler():
 async def create_chat_completion(request: CompletionRequest) -> CompletionResponse:
     """OpenAI-compatible chat completions endpoint"""
     handler = get_handler()
+    
+    # TODO: Authentication implementation point
+    # When security module is complete, add optional auth here:
+    # 
+    # from fastapi import Header
+    # authorization: Optional[str] = Header(None)
+    # 
+    # if handler.auth_enabled:  # Check if auth is configured
+    #     if not authorization:
+    #         raise HTTPException(status_code=401, detail="Authorization required")
+    #     
+    #     # Validate Bearer token
+    #     token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+    #     token_info = handler.auth.verify_token(token)
+    #     
+    #     if not token_info:
+    #         raise HTTPException(status_code=401, detail="Invalid or expired token")
+    #     
+    #     # Check rate limits
+    #     if not handler.auth.check_rate_limit(token_info):
+    #         raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    #     
+    #     # Could also add usage tracking, audit logging, etc.
+    #     # logger.info(f"API call from client: {token_info.client_id}")
+    
     return await handler.create_completion(request)

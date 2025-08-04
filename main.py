@@ -14,7 +14,7 @@ load_dotenv()
 app = FastAPI(
     title="AI Proxy Core",
     description="Minimal, stateless AI service proxy",
-    version="1.0.0"
+    version="0.3.2"
 )
 
 # Configure CORS - allow all origins by default

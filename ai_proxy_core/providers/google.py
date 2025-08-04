@@ -30,20 +30,57 @@ class GoogleCompletions(BaseCompletions):
         "gemini-pro-vision": "models/gemini-pro-vision"
     }
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, use_secure_storage: bool = False):
         """
         Initialize Google Gemini client.
         
         Args:
             api_key: Optional API key. Falls back to GEMINI_API_KEY env var.
+            use_secure_storage: Whether to use secure key storage if available.
         """
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
-        if not self.api_key:
+        self.use_secure_storage = use_secure_storage
+        self.key_manager = None
+        
+        # TODO: Complete secure storage implementation
+        # When security module is ready, this will:
+        # 1. Import SecureKeyManager from ai_proxy_core.security
+        # 2. Initialize with chosen storage backend (Vault, AWS Secrets, OS Keyring, etc.)
+        # 3. Retrieve encrypted keys and decrypt only when needed
+        # 4. Support key rotation without service restart
+        # 
+        # Example implementation:
+        # if use_secure_storage:
+        #     try:
+        #         from ..security import SecureKeyManager, KeyProvider
+        #         # Auto-detect best available provider
+        #         provider = KeyProvider.VAULT if os.getenv("VAULT_URL") else KeyProvider.ENVIRONMENT
+        #         self.key_manager = SecureKeyManager(provider=provider)
+        #         api_key = await self.key_manager.get_api_key("gemini")
+        #     except (ImportError, Exception) as e:
+        #         logger.debug(f"Secure storage not available: {e}")
+        
+        # For now, just flag intent to use secure storage
+        if use_secure_storage:
+            logger.info("Secure storage requested but not yet implemented - using standard env vars")
+            self.key_manager = None
+        
+        # Fall back to standard behavior
+        if not api_key:
+            api_key = os.environ.get("GEMINI_API_KEY")
+        
+        if not api_key:
             raise ValueError("GEMINI_API_KEY not provided")
+        
+        # Store key (encrypted if using secure storage)
+        if self.key_manager:
+            self.api_key = None  # Don't store in plain text
+            self._encrypted_key = self.key_manager.encryption.encrypt_key(api_key)
+        else:
+            self.api_key = api_key
             
         self.client = genai.Client(
             http_options={"api_version": "v1beta"},
-            api_key=self.api_key,
+            api_key=api_key,
         )
         self.telemetry = get_telemetry()
     

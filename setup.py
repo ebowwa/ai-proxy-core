@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ai-proxy-core",
-    version="0.3.1",
+    version="0.3.2",
     author="ebowwa",
     description="Minimal, reusable AI service handlers for Gemini and other LLMs",
     long_description=long_description,
@@ -41,12 +41,24 @@ setup(
         "anthropic": [
             "anthropic>=0.18.0",
         ],
+        "security": [
+            "cryptography>=41.0.0",
+            "keyring>=24.0.0",
+        ],
+        "vault": [
+            "hvac>=1.0.0",
+        ],
+        "aws": [
+            "boto3>=1.28.0",
+        ],
         "all": [
             "openai>=1.0.0",
             "anthropic>=0.18.0",
             "opentelemetry-api>=1.20.0",
             "opentelemetry-sdk>=1.20.0",
             "opentelemetry-exporter-otlp>=1.20.0",
+            "cryptography>=41.0.0",
+            "keyring>=24.0.0",
         ]
     }
 )

@@ -49,33 +49,46 @@ class CompletionClient:
         "yi": "ollama",
     }
     
-    def __init__(self, model_manager: Optional[ModelManager] = None):
+    def __init__(self, model_manager: Optional[ModelManager] = None, use_secure_storage: bool = False):
         """
         Initialize the unified completion client
         
         Args:
             model_manager: Optional ModelManager instance. If not provided, creates a new one.
+            use_secure_storage: Whether to use secure key storage if available.
         """
         self.model_manager = model_manager if model_manager is not None else ModelManager()
+        self.use_secure_storage = use_secure_storage or os.environ.get("USE_SECURE_STORAGE", "false").lower() == "true"
         self.providers = {}
         self._initialize_providers()
     
     def _initialize_providers(self):
         """Initialize available providers based on environment and dependencies"""
         
+        # TODO: When security module is complete, check for keys in secure storage
+        # has_keys = False
+        # if self.use_secure_storage:
+        #     try:
+        #         from .security import SecureKeyManager
+        #         key_manager = SecureKeyManager()
+        #         providers_with_keys = await key_manager.list_providers()
+        #         has_keys = bool(providers_with_keys)
+        #     except (ImportError, Exception):
+        #         pass
+        
         # Google/Gemini provider
         if os.environ.get("GEMINI_API_KEY"):
             try:
-                self.providers["gemini"] = GoogleCompletions()
-                logger.info("Initialized Gemini provider")
+                self.providers["gemini"] = GoogleCompletions(use_secure_storage=self.use_secure_storage)
+                logger.info(f"Initialized Gemini provider (secure storage: {self.use_secure_storage})")
             except Exception as e:
                 logger.warning(f"Could not initialize Gemini provider: {e}")
         
         # OpenAI provider  
         if os.environ.get("OPENAI_API_KEY"):
             try:
-                self.providers["openai"] = OpenAICompletions()
-                logger.info("Initialized OpenAI provider")
+                self.providers["openai"] = OpenAICompletions(use_secure_storage=self.use_secure_storage)
+                logger.info(f"Initialized OpenAI provider (secure storage: {self.use_secure_storage})")
             except Exception as e:
                 logger.warning(f"Could not initialize OpenAI provider: {e}")
         

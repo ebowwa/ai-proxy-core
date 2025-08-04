@@ -24,13 +24,14 @@ class OpenAICompletions(BaseCompletions):
         "gpt-3.5-turbo-16k",
     ]
     
-    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, use_secure_storage: bool = False):
         """
         Initialize OpenAI client.
         
         Args:
             api_key: Optional API key. Falls back to OPENAI_API_KEY env var.
             base_url: Optional base URL for OpenAI-compatible endpoints (e.g., Groq, Anyscale)
+            use_secure_storage: Whether to use secure key storage if available.
         """
         try:
             import openai
@@ -40,13 +41,32 @@ class OpenAICompletions(BaseCompletions):
                 "or pip install openai"
             )
         
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
-        if not self.api_key:
+        self.use_secure_storage = use_secure_storage
+        self.key_manager = None
+        
+        # TODO: Complete secure storage implementation (same as GoogleCompletions)
+        # See google.py for detailed implementation comments
+        if use_secure_storage:
+            logger.info("Secure storage requested but not yet implemented - using standard env vars")
+            self.key_manager = None
+        
+        # Fall back to standard behavior
+        if not api_key:
+            api_key = os.environ.get("OPENAI_API_KEY")
+        
+        if not api_key:
             raise ValueError("OPENAI_API_KEY not provided")
+        
+        # Store key (encrypted if using secure storage)
+        if self.key_manager:
+            self.api_key = None  # Don't store in plain text
+            self._encrypted_key = self.key_manager.encryption.encrypt_key(api_key)
+        else:
+            self.api_key = api_key
         
         # Support custom endpoints (OpenAI-compatible APIs)
         self.client = openai.AsyncOpenAI(
-            api_key=self.api_key,
+            api_key=api_key,
             base_url=base_url
         )
         self.telemetry = get_telemetry()
