@@ -131,17 +131,20 @@ class OllamaCompletions(BaseCompletions):
             return []
     
     def list_models(self) -> List[str]:
-        """List available Ollama models (cached)"""
-        # Return common models as fallback
-        # In practice, you'd want to call list_models_async()
-        return [
-            "llama2",
-            "llama2:13b",
-            "llama2:70b",
-            "mistral",
-            "mixtral",
-            "codellama",
-            "neural-chat",
-            "starling-lm",
-            "yi",
-        ]
+        """List available Ollama models from the server"""
+        import asyncio
+        try:
+            # Get or create event loop
+            try:
+                loop = asyncio.get_running_loop()
+                # We're in an async context, create a task
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(asyncio.run, self.list_models_async())
+                    return future.result()
+            except RuntimeError:
+                # No running loop, we can use asyncio.run
+                return asyncio.run(self.list_models_async())
+        except Exception as e:
+            logger.error(f"Failed to fetch models from Ollama: {e}")
+            return []

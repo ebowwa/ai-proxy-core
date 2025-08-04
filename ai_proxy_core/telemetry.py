@@ -21,12 +21,25 @@ except ImportError:
     OTEL_AVAILABLE = False
 
 
+class NoOpCounter:
+    """No-op counter implementation"""
+    def add(self, amount: int, attributes: Dict[str, Any] = None):
+        pass
+
+
 class NoOpTelemetry:
     """No-op implementation when OpenTelemetry is not available"""
+    def __init__(self):
+        self.request_counter = NoOpCounter()
+    
     def create_counter(self, name: str, description: str = ""):
-        return self
+        return NoOpCounter()
     
     def add(self, amount: int, attributes: Dict[str, Any] = None):
+        pass
+    
+    def record(self, value: float, attributes: Dict[str, Any] = None):
+        """No-op record for histogram compatibility"""
         pass
     
     @contextmanager
@@ -46,6 +59,9 @@ class TelemetryManager:
         
         if not self.enabled:
             self._no_op = NoOpTelemetry()
+            # Make all the same attributes available when disabled
+            self.request_counter = self._no_op.request_counter
+            self.duration_histogram = self._no_op
             return
             
         # Setup resource
