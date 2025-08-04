@@ -36,7 +36,8 @@ class OpenAICompletions(BaseCompletions):
             import openai
         except ImportError:
             raise ImportError(
-                "OpenAI library not installed. Install with: pip install openai"
+                "OpenAI library not installed. Install with: pip install ai-proxy-core[openai] "
+                "or pip install openai"
             )
         
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")

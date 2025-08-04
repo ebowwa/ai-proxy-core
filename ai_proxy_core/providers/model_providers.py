@@ -26,7 +26,10 @@ class OpenAIModelProvider(ModelProvider):
             import openai
             self._openai = openai
         except ImportError:
-            raise ImportError("OpenAI library not installed. Install with: pip install openai")
+            raise ImportError(
+                "OpenAI library not installed. Install with: pip install ai-proxy-core[openai] "
+                "or pip install openai"
+            )
         
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         if not self.api_key:

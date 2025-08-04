@@ -13,12 +13,12 @@ Basic (Google Gemini only):
 pip install ai-proxy-core
 ```
 
-With specific providers:
+With specific providers (optional dependencies):
 ```bash
-pip install "ai-proxy-core[openai]"     # OpenAI support
-pip install "ai-proxy-core[anthropic]"  # Anthropic support (coming soon)
-pip install "ai-proxy-core[telemetry]"  # OpenTelemetry support
-pip install "ai-proxy-core[all]"        # Everything
+pip install ai-proxy-core[openai]     # OpenAI support
+pip install ai-proxy-core[anthropic]  # Anthropic support (coming soon)
+pip install ai-proxy-core[telemetry]  # OpenTelemetry support
+pip install ai-proxy-core[all]        # Everything
 ```
 
 Or install from source:
@@ -89,6 +89,63 @@ for model in models:
 openai_models = await client.list_models(provider="openai")
 ```
 
+## Ollama Integration
+
+### Prerequisites
+```bash
+# Install Ollama from https://ollama.ai
+# Start Ollama service
+ollama serve
+
+# Pull a model
+ollama pull llama3.2
+```
+
+### Using Ollama with CompletionClient
+```python
+from ai_proxy_core import CompletionClient, ModelManager
+
+# Option 1: Auto-detection (Ollama will be detected if running)
+client = CompletionClient()
+
+# Option 2: With custom ModelManager
+manager = ModelManager()
+client = CompletionClient(model_manager=manager)
+
+# List Ollama models
+models = await client.list_models(provider="ollama")
+print(f"Available Ollama models: {[m['id'] for m in models]}")
+
+# Create completion
+response = await client.create_completion(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="llama3.2",
+    provider="ollama",  # Optional, auto-detected from model name
+    temperature=0.7
+)
+```
+
+### Direct Ollama Usage
+```python
+from ai_proxy_core import OllamaCompletions
+
+ollama = OllamaCompletions()
+
+# List available models
+models = ollama.list_models()
+print(f"Available models: {models}")
+
+# Create completion
+response = await ollama.create_completion(
+    messages=[{"role": "user", "content": "Explain quantum computing"}],
+    model="llama3.2",
+    temperature=0.7,
+    max_tokens=500
+)
+```
+
+See [examples/ollama_complete_guide.py](examples/ollama_complete_guide.py) for comprehensive examples including error handling, streaming, and advanced features.
+
 ## Advanced Usage
 
 ### Provider-Specific Completions
@@ -114,12 +171,12 @@ response = await openai.create_completion(
     tools=[{"type": "function", "function": {"name": "get_weather"}}]
 )
 
-# Ollama with streaming
-ollama = OllamaCompletions(base_url="http://localhost:11434")
+# Ollama for local models
+ollama = OllamaCompletions()  # Auto-detects localhost:11434
 response = await ollama.create_completion(
     messages=[{"role": "user", "content": "Hello!"}],
-    model="llama2",
-    stream=True
+    model="llama3.2",
+    temperature=0.7
 )
 ```
 

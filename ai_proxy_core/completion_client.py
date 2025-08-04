@@ -49,9 +49,14 @@ class CompletionClient:
         "yi": "ollama",
     }
     
-    def __init__(self):
-        """Initialize the unified completion client"""
-        self.model_manager = ModelManager()
+    def __init__(self, model_manager: Optional[ModelManager] = None):
+        """
+        Initialize the unified completion client
+        
+        Args:
+            model_manager: Optional ModelManager instance. If not provided, creates a new one.
+        """
+        self.model_manager = model_manager if model_manager is not None else ModelManager()
         self.providers = {}
         self._initialize_providers()
     
