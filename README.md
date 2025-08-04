@@ -292,46 +292,88 @@ async def create_completion(request: CompletionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 ```
 
-#### WebSocket for Gemini Live
+#### WebSocket for Gemini Live (Fixed in v0.3.3)
+
 ```python
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from ai_proxy_core import GeminiLiveSession
+from google import genai
+from google.genai import types
+import asyncio
 
 app = FastAPI()
 
-@app.websocket("/ws/gemini")
-async def gemini_websocket(
-    websocket: WebSocket,
-    enable_code_execution: bool = False,
-    enable_google_search: bool = False
-):
+@app.websocket("/api/gemini/ws")
+async def gemini_websocket(websocket: WebSocket):
     await websocket.accept()
     
-    # Create session with tools if requested
-    session = GeminiLiveSession(
-        enable_code_execution=enable_code_execution,
-        enable_google_search=enable_google_search
+    # Create Gemini client
+    client = genai.Client(
+        http_options={"api_version": "v1beta"},
+        api_key="your-gemini-api-key"
     )
     
-    # Set up callbacks to forward to WebSocket
-    session.on_audio = lambda data: websocket.send_json({
-        "type": "audio", "data": data
-    })
-    session.on_text = lambda text: websocket.send_json({
-        "type": "text", "data": text
-    })
+    # Configure for text (audio requires PCM format)
+    config = types.LiveConnectConfig(
+        response_modalities=["TEXT"],
+        generation_config=types.GenerationConfig(
+            temperature=0.7,
+            max_output_tokens=1000
+        )
+    )
     
-    await session.start()
-    
-    try:
-        async for message in websocket.iter_json():
-            if message["type"] == "audio":
-                await session.send_audio(message["data"])
-            elif message["type"] == "text":
-                await session.send_text(message["data"])
-    except WebSocketDisconnect:
-        await session.stop()
+    # Connect using async context manager
+    async with client.aio.live.connect(
+        model="gemini-2.0-flash-exp",
+        config=config
+    ) as session:
+        
+        # Handle bidirectional communication
+        async def receive_from_client():
+            async for message in websocket.iter_json():
+                if message["type"] in ["text", "message"]:
+                    text = message.get("data", {}).get("text", "")
+                    if text:
+                        await session.send(input=text, end_of_turn=True)
+        
+        async def receive_from_gemini():
+            while True:
+                turn = session.receive()
+                async for response in turn:
+                    if hasattr(response, 'server_content'):
+                        content = response.server_content
+                        if hasattr(content, 'model_turn'):
+                            for part in content.model_turn.parts:
+                                if hasattr(part, 'text') and part.text:
+                                    await websocket.send_json({
+                                        "type": "response",
+                                        "text": part.text
+                                    })
+        
+        # Run both tasks concurrently
+        task1 = asyncio.create_task(receive_from_client())
+        task2 = asyncio.create_task(receive_from_gemini())
+        
+        # Wait for either to complete
+        done, pending = await asyncio.wait(
+            [task1, task2],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        
+        # Clean up
+        for task in pending:
+            task.cancel()
 ```
+
+**Try the HTML Demo:**
+```bash
+# Start the FastAPI server
+python main.py
+
+# Open the HTML demo in your browser
+open examples/gemini_live_demo.html
+```
+
+The demo provides a full-featured chat interface with WebSocket connection to Gemini Live. Note: Audio input requires PCM format conversion (not yet implemented).
 
 ## Features
 
