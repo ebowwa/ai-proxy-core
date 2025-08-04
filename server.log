@@ -439,3 +439,44 @@ INFO:     Application startup complete.
 INFO:     ('127.0.0.1', 54874) - "WebSocket /api/gemini/ws" [accepted]
 INFO:     connection open
 INFO:     connection closed
+WARNING:  WatchFiles detected changes in 'setup.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [12283]
+INFO:     Started server process [12786]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'build/lib/ai_proxy_core/providers/base.py', 'build/lib/ai_proxy_core/providers/google.py', 'build/lib/ai_proxy_core/providers/__init__.py', 'build/lib/ai_proxy_core/models.py', 'build/lib/ai_proxy_core/providers/model_providers.py', 'build/lib/ai_proxy_core/__init__.py', 'build/lib/ai_proxy_core/gemini_live.py', 'build/lib/ai_proxy_core/providers/ollama.py', 'build/lib/ai_proxy_core/providers/openai.py', 'build/lib/ai_proxy_core/completions.py', 'build/lib/ai_proxy_core/completion_client.py', 'build/lib/ai_proxy_core/telemetry.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [12786]
+INFO:     Started server process [12955]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'ai_proxy_core-0.3.2/ai_proxy_core/providers/model_providers.py', 'ai_proxy_core-0.3.2/tests/test_real_ollama.py', 'build/lib/ai_proxy_core/__init__.py', 'build/lib/ai_proxy_core/providers/ollama.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/base.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/google.py', 'ai_proxy_core-0.3.2/ai_proxy_core/providers/google.py', 'build/lib/ai_proxy_core/providers/openai.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/completions.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/telemetry.py', 'build/lib/ai_proxy_core/providers/__init__.py', 'build/lib/ai_proxy_core/models.py', 'ai_proxy_core-0.3.2/ai_proxy_core/completion_client.py', 'build/lib/ai_proxy_core/providers/model_providers.py', 'build/lib/ai_proxy_core/gemini_live.py', 'ai_proxy_core-0.3.2/ai_proxy_core/models.py', 'ai_proxy_core-0.3.2/ai_proxy_core/providers/base.py', 'build/lib/ai_proxy_core/completion_client.py', 'ai_proxy_core-0.3.2/ai_proxy_core/gemini_live.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/ollama.py', 'ai_proxy_core-0.3.2/ai_proxy_core/providers/ollama.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/openai.py', 'ai_proxy_core-0.3.2/ai_proxy_core/providers/openai.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/__init__.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/__init__.py', 'ai_proxy_core-0.3.2/ai_proxy_core/providers/__init__.py', 'ai_proxy_core-0.3.2/tests/test_telemetry.py', 'build/lib/ai_proxy_core/completions.py', 'ai_proxy_core-0.3.2/tests/test_fixes.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/model_providers.py', 'build/lib/ai_proxy_core/telemetry.py', 'build/lib/ai_proxy_core/providers/google.py', 'build/lib/ai_proxy_core/providers/base.py', 'ai_proxy_core-0.3.2/ai_proxy_core/completions.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/models.py', 'ai_proxy_core-0.3.2/ai_proxy_core/telemetry.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/gemini_live.py', 'ai_proxy_core-0.3.2/ai_proxy_core/__init__.py', 'ai_proxy_core-0.3.2/setup.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/completion_client.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [12955]
+INFO:     Started server process [13042]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'ai_proxy_core/__init__.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [13042]
+INFO:     Started server process [13259]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'build/lib/ai_proxy_core/providers/base.py', 'build/lib/ai_proxy_core/providers/google.py', 'build/lib/ai_proxy_core/providers/__init__.py', 'build/lib/ai_proxy_core/models.py', 'build/lib/ai_proxy_core/providers/model_providers.py', 'build/lib/ai_proxy_core/__init__.py', 'build/lib/ai_proxy_core/gemini_live.py', 'build/lib/ai_proxy_core/providers/ollama.py', 'build/lib/ai_proxy_core/providers/openai.py', 'build/lib/ai_proxy_core/completions.py', 'build/lib/ai_proxy_core/completion_client.py', 'build/lib/ai_proxy_core/telemetry.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [13259]
+WARNING:  WatchFiles detected changes in 'ai_proxy_core-0.3.3/ai_proxy_core/completions.py', 'ai_proxy_core-0.3.3/ai_proxy_core/telemetry.py', 'build/lib/ai_proxy_core/__init__.py', 'ai_proxy_core-0.3.3/ai_proxy_core/providers/ollama.py', 'ai_proxy_core-0.3.3/ai_proxy_core/__init__.py', 'build/lib/ai_proxy_core/providers/ollama.py', 'ai_proxy_core-0.3.3/ai_proxy_core/providers/openai.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/base.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/google.py', 'build/lib/ai_proxy_core/providers/openai.py', 'ai_proxy_core-0.3.3/ai_proxy_core/providers/__init__.py', 'ai_proxy_core-0.3.3/tests/test_real_ollama.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/completions.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/telemetry.py', 'build/lib/ai_proxy_core/providers/__init__.py', 'build/lib/ai_proxy_core/models.py', 'build/lib/ai_proxy_core/providers/model_providers.py', 'build/lib/ai_proxy_core/gemini_live.py', 'build/lib/ai_proxy_core/completion_client.py', 'ai_proxy_core-0.3.3/ai_proxy_core/completion_client.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/ollama.py', 'ai_proxy_core-0.3.3/ai_proxy_core/providers/model_providers.py', 'ai_proxy_core-0.3.3/ai_proxy_core/models.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/openai.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/__init__.py', 'ai_proxy_core-0.3.3/setup.py', 'ai_proxy_core-0.3.3/tests/test_fixes.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/__init__.py', 'ai_proxy_core-0.3.3/ai_proxy_core/gemini_live.py', 'build/lib/ai_proxy_core/completions.py', 'ai_proxy_core-0.3.3/ai_proxy_core/providers/google.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/providers/model_providers.py', 'build/lib/ai_proxy_core/telemetry.py', 'build/lib/ai_proxy_core/providers/google.py', 'build/lib/ai_proxy_core/providers/base.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/models.py', 'ai_proxy_core-0.3.3/tests/test_telemetry.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/gemini_live.py', 'ai_proxy_core-0.3.3/ai_proxy_core/providers/base.py', 'build/bdist.macosx-15.1-arm64/wheel/ai_proxy_core/completion_client.py'. Reloading...
+INFO:     Started server process [13339]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
