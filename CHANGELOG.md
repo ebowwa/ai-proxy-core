@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.3] - 2025-08-04
+- Fix Gemini Live WebSocket implementation
+- Implement proper async context manager handling for sessions
+- Add bidirectional communication with separate async tasks
+- Fix message format compatibility between client and server
+- Add HTML demos for Gemini Live WebSocket (examples/gemini_live_demo.html)
+- Add debug tools for testing WebSocket connections
+- Reorganize test files into proper directories
+- Note: Audio input pending (requires PCM format conversion from WebM)
+
 ## [0.3.2] - 2025-08-04
 - Add security scaffolding for future implementation
 - Add optional `use_secure_storage` parameter to providers (GoogleCompletions, OpenAICompletions)
