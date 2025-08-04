@@ -1,6 +1,32 @@
 # Changelog
 
-## [0.1.9.0] - 2025-08-03n- API migration to provider architecture completedn
+## [0.3.2] - 2025-08-04
+- Add security scaffolding for future implementation
+- Add optional `use_secure_storage` parameter to providers (GoogleCompletions, OpenAICompletions)
+- Add security dependencies to setup.py extras (`[security]`, `[vault]`, `[aws]`)
+- Add TODO placeholders for authentication and secure key storage implementation
+- Update CompletionClient to support secure storage configuration
+- Maintain full backward compatibility - no breaking changes
+- Related to issues #19 and #20
+
+## [0.3.1] - 2025-08-03
+- Fix telemetry NoOpTelemetry missing request_counter attribute
+- Resolve GitHub issues #15, #16, #17
+- Add LLM prompt reference for easy integration help
+- Add AI Proxy Core expert agent for Claude
+- Add roadmap link to README
+
+## [0.3.0] - 2025-08-03
+- Introduce CompletionClient unified interface
+- Add model management system with ModelManager
+- Implement model discovery and automatic provider detection
+
+## [0.2.0] - 2025-08-03
+- Major refactor to provider architecture
+- Add support for multiple LLM providers simultaneously
+
+## [0.1.9.0] - 2025-08-03
+- API migration to provider architecture completed
 ## [0.1.9] - 2025-08-02
 - BREAKING: Refactor to provider-specific classes (GoogleCompletions, OpenAICompletions, OllamaCompletions)
 - Add multi-provider support with clean separation
