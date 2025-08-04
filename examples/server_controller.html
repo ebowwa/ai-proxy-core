@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Proxy Core - Auto-Server Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .control-panel {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #0f3460;
+            border-radius: 8px;
+        }
+
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.running {
+            background: #44ff44;
+        }
+
+        .status-indicator.starting {
+            background: #ffaa44;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .env-setup {
+            margin-bottom: 20px;
+        }
+
+        .env-setup input {
+            width: 100%;
+            padding: 12px;
+            background: #0f3460;
+            border: 1px solid #4facfe;
+            border-radius: 6px;
+            color: #fff;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .env-setup input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.3);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chat-area {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #0f3460;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .message.user {
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            margin-left: 20%;
+            text-align: right;
+        }
+
+        .message.assistant {
+            background: #1e3c72;
+            margin-right: 20%;
+        }
+
+        .message.system {
+            background: #533483;
+            text-align: center;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            background: #0f3460;
+            border: 1px solid #4facfe;
+            border-radius: 6px;
+            color: #fff;
+        }
+
+        .logs {
+            margin-top: 20px;
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-output {
+            background: #000;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            color: #0f0;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .success {
+            color: #44ff44;
+        }
+
+        .warning {
+            color: #ffaa44;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI Proxy Core</h1>
+            <p>Self-Managing WebSocket Demo</p>
+        </div>
+
+        <div class="control-panel">
+            <div class="server-status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">Server Stopped</span>
+                <span id="serverUrl" style="margin-left: auto; font-family: monospace;"></span>
+            </div>
+
+            <div class="env-setup">
+                <input type="password" id="apiKey" placeholder="Enter your GEMINI_API_KEY">
+                <button onclick="startServer()" id="startBtn">Start Server</button>
+                <button onclick="stopServer()" id="stopBtn" disabled>Stop Server</button>
+                <button onclick="testConnection()" id="testBtn" disabled>Test Connection</button>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="messages" id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Type your message..." disabled onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()" id="sendBtn" disabled>Send</button>
+            </div>
+        </div>
+
+        <div class="logs">
+            <h3>Server Logs</h3>
+            <div class="log-output" id="logOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let serverProcess = null;
+        let serverPort = 8000;
+        let checkInterval = null;
+
+        function log(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warning';
+            logOutput.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function updateStatus(status) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            const url = document.getElementById('serverUrl');
+            
+            switch(status) {
+                case 'running':
+                    indicator.className = 'status-indicator running';
+                    text.textContent = 'Server Running';
+                    url.textContent = `ws://localhost:${serverPort}/api/gemini/ws`;
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('stopBtn').disabled = false;
+                    document.getElementById('testBtn').disabled = false;
+                    break;
+                case 'starting':
+                    indicator.className = 'status-indicator starting';
+                    text.textContent = 'Starting Server...';
+                    break;
+                default:
+                    indicator.className = 'status-indicator';
+                    text.textContent = 'Server Stopped';
+                    url.textContent = '';
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('testBtn').disabled = true;
+                    document.getElementById('messageInput').disabled = true;
+                    document.getElementById('sendBtn').disabled = true;
+            }
+        }
+
+        function addMessage(content, type = 'user') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function startServer() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('Please enter your GEMINI_API_KEY');
+                return;
+            }
+
+            updateStatus('starting');
+            log('Starting Python server...', 'info');
+
+            // Create a simple Node.js script to run the Python server
+            const nodeScript = `
+const { spawn } = require('child_process');
+const path = require('path');
+
+process.env.GEMINI_API_KEY = '${apiKey}';
+const pythonProcess = spawn('python', ['main.py'], {
+    cwd: path.dirname(__dirname),
+    env: { ...process.env, GEMINI_API_KEY: '${apiKey}' }
+});
+
+pythonProcess.stdout.on('data', (data) => {
+    console.log(\`\${data}\`);
+});
+
+pythonProcess.stderr.on('data', (data) => {
+    console.error(\`\${data}\`);
+});
+
+pythonProcess.on('close', (code) => {
+    console.log(\`Server process exited with code \${code}\`);
+});
+
+// Keep the script running
+process.stdin.resume();
+`;
+
+            // Since we can't actually spawn processes from the browser, 
+            // we'll simulate the server management
+            try {
+                // In a real implementation, you'd use Electron or a local Node.js server
+                // For now, we'll just try to connect and assume the server is managed externally
+                
+                // Set the API key in localStorage for persistence
+                localStorage.setItem('GEMINI_API_KEY', apiKey);
+                
+                // Check if server is reachable
+                const response = await fetch(`http://localhost:${serverPort}/health`).catch(() => null);
+                
+                if (response && response.ok) {
+                    log('Server is already running!', 'success');
+                    updateStatus('running');
+                    connectWebSocket();
+                } else {
+                    log('Server not detected. Please start it manually with:', 'warning');
+                    log(`export GEMINI_API_KEY="${apiKey.substring(0, 10)}..."`, 'info');
+                    log('python main.py', 'info');
+                    
+                    // Start checking for server availability
+                    checkInterval = setInterval(async () => {
+                        const resp = await fetch(`http://localhost:${serverPort}/health`).catch(() => null);
+                        if (resp && resp.ok) {
+                            clearInterval(checkInterval);
+                            log('Server detected!', 'success');
+                            updateStatus('running');
+                            connectWebSocket();
+                        }
+                    }, 2000);
+                    
+                    setTimeout(() => {
+                        if (checkInterval) {
+                            clearInterval(checkInterval);
+                            log('Server startup timeout. Please start manually.', 'error');
+                            updateStatus('stopped');
+                        }
+                    }, 30000);
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                updateStatus('stopped');
+            }
+        }
+
+        function stopServer() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            
+            if (checkInterval) {
+                clearInterval(checkInterval);
+                checkInterval = null;
+            }
+            
+            log('Server stopped (connection closed)', 'info');
+            updateStatus('stopped');
+            addMessage('Disconnected from server', 'system');
+        }
+
+        function connectWebSocket() {
+            const wsUrl = `ws://localhost:${serverPort}/api/gemini/ws`;
+            
+            try {
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    log('WebSocket connected', 'success');
+                    addMessage('Connected to Gemini Live', 'system');
+                    
+                    // Send initial configuration
+                    const config = {
+                        type: 'config',
+                        data: {
+                            model: 'gemini-1.5-flash',
+                            generation_config: {
+                                temperature: 0.7,
+                                max_output_tokens: 1000
+                            }
+                        }
+                    };
+                    
+                    ws.send(JSON.stringify(config));
+                    
+                    document.getElementById('messageInput').disabled = false;
+                    document.getElementById('sendBtn').disabled = false;
+                };
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        switch(data.type) {
+                            case 'response':
+                                if (data.text) {
+                                    addMessage(data.text, 'assistant');
+                                }
+                                break;
+                            case 'error':
+                                addMessage(`Error: ${data.error}`, 'system');
+                                log(`WebSocket error: ${data.error}`, 'error');
+                                break;
+                            case 'config_success':
+                                log('Configuration accepted', 'success');
+                                break;
+                        }
+                    } catch (e) {
+                        log(`Parse error: ${e.message}`, 'error');
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    log('WebSocket error occurred', 'error');
+                };
+                
+                ws.onclose = () => {
+                    log('WebSocket connection closed', 'warning');
+                    ws = null;
+                    document.getElementById('messageInput').disabled = true;
+                    document.getElementById('sendBtn').disabled = true;
+                };
+                
+            } catch (error) {
+                log(`Connection error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`http://localhost:${serverPort}/health`);
+                const data = await response.json();
+                log(`Health check: ${JSON.stringify(data)}`, 'success');
+                addMessage('Server is healthy!', 'system');
+            } catch (error) {
+                log(`Health check failed: ${error.message}`, 'error');
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            addMessage(message, 'user');
+            
+            const payload = {
+                type: 'message',
+                data: {
+                    text: message
+                }
+            };
+            
+            ws.send(JSON.stringify(payload));
+            input.value = '';
+            input.focus();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Check for saved API key
+        window.onload = () => {
+            const savedKey = localStorage.getItem('GEMINI_API_KEY');
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
+                log('Found saved API key', 'info');
+            }
+        };
+
+        // Cleanup on close
+        window.onbeforeunload = () => {
+            stopServer();
+        };
+    </script>
+</body>
+</html>

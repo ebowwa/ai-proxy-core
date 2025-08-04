@@ -1,0 +1,144 @@
+INFO:     Started server process [12108]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+DEBUG:    = connection is CONNECTING
+DEBUG:    < GET /test HTTP/1.1
+DEBUG:    < host: localhost:8001
+DEBUG:    < connection: Upgrade
+DEBUG:    < pragma: no-cache
+DEBUG:    < cache-control: no-cache
+DEBUG:    < user-agent: Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36
+DEBUG:    < upgrade: websocket
+DEBUG:    < origin: null
+DEBUG:    < sec-websocket-version: 13
+DEBUG:    < accept-encoding: gzip, deflate, br, zstd
+DEBUG:    < accept-language: en-US,en;q=0.9,ko;q=0.8
+DEBUG:    < sec-websocket-key: hxZNHK6krdXwnwJbzdoMrg==
+DEBUG:    < sec-websocket-extensions: permessage-deflate; client_max_window_bits
+INFO:     ('127.0.0.1', 54207) - "WebSocket /test" [accepted]
+INFO:__main__:WebSocket connected
+INFO:__main__:API key found: AIzaSyCgD5...
+INFO:__main__:Connecting to Gemini...
+DEBUG:websockets.client:= connection is CONNECTING
+DEBUG:    > HTTP/1.1 101 Switching Protocols
+DEBUG:    > Upgrade: websocket
+DEBUG:    > Connection: Upgrade
+DEBUG:    > Sec-WebSocket-Accept: d8/N7iXaTiBpf9bF7sFtMGnBduw=
+DEBUG:    > Sec-WebSocket-Extensions: permessage-deflate
+DEBUG:    > date: Mon, 04 Aug 2025 20:07:37 GMT
+DEBUG:    > server: uvicorn
+INFO:     connection open
+DEBUG:    = connection is OPEN
+DEBUG:websockets.client:> GET //ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent HTTP/1.1
+DEBUG:websockets.client:> Host: generativelanguage.googleapis.com
+DEBUG:websockets.client:> Upgrade: websocket
+DEBUG:websockets.client:> Connection: Upgrade
+DEBUG:websockets.client:> Sec-WebSocket-Key: yUsLxiKtx0jD3yU5B862aA==
+DEBUG:websockets.client:> Sec-WebSocket-Version: 13
+DEBUG:websockets.client:> Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+DEBUG:websockets.client:> Content-Type: application/json
+DEBUG:websockets.client:> x-goog-api-key: AIzaSyCgD5rvdVPLX4gafPpjFckOtSSxGcRGn5k
+DEBUG:websockets.client:> user-agent: google-genai-sdk/1.28.0 gl-python/3.10.0
+DEBUG:websockets.client:> x-goog-api-client: google-genai-sdk/1.28.0 gl-python/3.10.0
+DEBUG:websockets.client:< HTTP/1.1 101 Switching Protocols
+DEBUG:websockets.client:< X-Client-Wire-Protocol: HTTP/1.1
+DEBUG:websockets.client:< Connection: Upgrade
+DEBUG:websockets.client:< Upgrade: websocket
+DEBUG:websockets.client:< Sec-WebSocket-Accept: ndH0kVxFnrcyrxEx5u8lmdMeQf8=
+DEBUG:websockets.client:< Date: Mon, 04 Aug 2025 20:07:39 GMT
+DEBUG:websockets.client:< Server-Timing: gfet4t7; dur=41
+DEBUG:websockets.client:< Set-Cookie: S==Hzs4j4sIGznLjWzDVic1ctQMhQh5YBFsbysDNGX0034; path=/; priority=low
+DEBUG:websockets.client:< Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+DEBUG:websockets.client:= connection is OPEN
+DEBUG:websockets.client:> TEXT '{"setup": {"model": "models/gemini-2.0-flash-ex...odalities": ["TEXT"]}}}' [105 bytes]
+DEBUG:websockets.client:< BINARY 7b 0a 20 20 22 73 65 74 75 70 43 6f 6d 70 6c 65 ... 22 3a 20 7b 7d 0a 7d 0a [26 bytes]
+INFO:google_genai.live:b'{\n  "setupComplete": {}\n}\n'
+INFO:__main__:Connected to Gemini successfully
+DEBUG:    > TEXT '{"status":"connected"}' [22 bytes]
+INFO:__main__:Waiting for Gemini response...
+DEBUG:    < TEXT '{"type":"text","text":"hi"}' [27 bytes]
+INFO:__main__:Received from client: {'type': 'text', 'text': 'hi'}
+INFO:__main__:Sending to Gemini: hi
+/Users/ebowwa/apps/ai-proxy-core/debug_gemini_ws.py:65: DeprecationWarning: The `session.send` method is deprecated and will be removed in a future version (not before Q3 2025).
+Please use one of the more specific methods: `send_client_content`, `send_realtime_input`, or `send_tool_response` instead.
+  await session.send(input=text, end_of_turn=True)
+DEBUG:websockets.client:> TEXT '{"client_content": {"turns": [{"parts": [{"text..."turn_complete": true}}' [99 bytes]
+INFO:__main__:Sent to Gemini successfully
+DEBUG:websockets.client:< BINARY 7b 0a 20 20 22 73 65 72 76 65 72 43 6f 6e 74 65 ... 7d 0a 20 20 7d 0a 7d 0a [122 bytes]
+DEBUG:websockets.client:< BINARY 7b 0a 20 20 22 73 65 72 76 65 72 43 6f 6e 74 65 ... 7d 0a 20 20 7d 0a 7d 0a [155 bytes]
+DEBUG:websockets.client:< BINARY 7b 0a 20 20 22 73 65 72 76 65 72 43 6f 6e 74 65 ... 5d 0a 20 20 7d 0a 7d 0a [374 bytes]
+INFO:__main__:Got response: setup_complete=None server_content=LiveServerContent(
+  model_turn=Content(
+    parts=[
+      Part(
+        text='Hi'
+      ),
+    ]
+  )
+) tool_call=None tool_call_cancellation=None usage_metadata=None go_away=None session_resumption_update=None
+INFO:__main__:Sending text to client: Hi
+DEBUG:    > TEXT '{"type":"response","text":"Hi"}' [31 bytes]
+INFO:__main__:Got response: setup_complete=None server_content=LiveServerContent(
+  model_turn=Content(
+    parts=[
+      Part(
+        text=""" there! How can I help you today?
+"""
+      ),
+    ]
+  )
+) tool_call=None tool_call_cancellation=None usage_metadata=None go_away=None session_resumption_update=None
+INFO:__main__:Sending text to client:  there! How can I help you today?
+
+DEBUG:    > TEXT '{"type":"response","text":" there! How can I help you today?\\n"}' [64 bytes]
+INFO:__main__:Got response: setup_complete=None server_content=LiveServerContent(
+  turn_complete=True
+) tool_call=None tool_call_cancellation=None usage_metadata=UsageMetadata(
+  prompt_token_count=9,
+  prompt_tokens_details=[
+    ModalityTokenCount(
+      modality=<MediaModality.TEXT: 'TEXT'>,
+      token_count=9
+    ),
+  ],
+  response_token_count=11,
+  response_tokens_details=[
+    ModalityTokenCount(
+      modality=<MediaModality.TEXT: 'TEXT'>,
+      token_count=11
+    ),
+  ],
+  total_token_count=20
+) go_away=None session_resumption_update=None
+INFO:__main__:Waiting for Gemini response...
+DEBUG:    % sending keepalive ping
+DEBUG:    > PING af 28 8d 2c [binary, 4 bytes]
+DEBUG:    < PONG af 28 8d 2c [binary, 4 bytes]
+DEBUG:    % received keepalive pong
+DEBUG:websockets.client:> PING 86 91 01 55 [binary, 4 bytes]
+DEBUG:websockets.client:% sent keepalive ping
+DEBUG:websockets.client:< PONG 86 91 01 55 [binary, 4 bytes]
+DEBUG:websockets.client:% received keepalive pong
+DEBUG:    % sending keepalive ping
+DEBUG:    > PING 46 37 e2 85 [binary, 4 bytes]
+DEBUG:    < PONG 46 37 e2 85 [binary, 4 bytes]
+DEBUG:    % received keepalive pong
+DEBUG:websockets.client:> PING 71 05 b1 b2 [binary, 4 bytes]
+DEBUG:websockets.client:% sent keepalive ping
+DEBUG:websockets.client:< PONG 71 05 b1 b2 [binary, 4 bytes]
+DEBUG:websockets.client:% received keepalive pong
+DEBUG:    < CLOSE 1005 (no status received [internal]) [0 bytes]
+DEBUG:    = connection is CLOSING
+DEBUG:    > CLOSE 1005 (no status received [internal]) [0 bytes]
+DEBUG:    x half-closing TCP connection
+DEBUG:    = connection is CLOSED
+INFO:     connection closed
+INFO:__main__:One task completed, cancelling others
+DEBUG:websockets.client:> CLOSE 1000 (OK) [2 bytes]
+DEBUG:websockets.client:= connection is CLOSING
+DEBUG:websockets.client:< CLOSE 1000 (OK) [2 bytes]
+DEBUG:websockets.client:< EOF
+DEBUG:websockets.client:> EOF
+DEBUG:websockets.client:= connection is CLOSED
+INFO:__main__:Closing WebSocket
