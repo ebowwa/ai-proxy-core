@@ -64,12 +64,12 @@ class GoogleCompletions(BaseCompletions):
             logger.info("Secure storage requested but not yet implemented - using standard env vars")
             self.key_manager = None
         
-        # Fall back to standard behavior
+        # Fall back to standard behavior - check both GEMINI_API_KEY and GOOGLE_API_KEY
         if not api_key:
-            api_key = os.environ.get("GEMINI_API_KEY")
+            api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         
         if not api_key:
-            raise ValueError("GEMINI_API_KEY not provided")
+            raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY not provided")
         
         # Store key (encrypted if using secure storage)
         if self.key_manager:

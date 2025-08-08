@@ -76,8 +76,8 @@ class CompletionClient:
         #     except (ImportError, Exception):
         #         pass
         
-        # Google/Gemini provider
-        if os.environ.get("GEMINI_API_KEY"):
+        # Google/Gemini provider - check both GEMINI_API_KEY and GOOGLE_API_KEY
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
             try:
                 self.providers["gemini"] = GoogleCompletions(use_secure_storage=self.use_secure_storage)
                 logger.info(f"Initialized Gemini provider (secure storage: {self.use_secure_storage})")
@@ -98,6 +98,21 @@ class CompletionClient:
             logger.info("Initialized Ollama provider")
         except Exception as e:
             logger.warning(f"Could not initialize Ollama provider: {e}")
+        
+        # Also check if ModelManager has registered providers
+        if self.model_manager and hasattr(self.model_manager, 'providers'):
+            for provider_name, provider in self.model_manager.providers.items():
+                if provider_name not in self.providers:
+                    # Map ModelProvider instances to completion handlers
+                    if provider_name == "gemini" and "gemini" not in self.providers:
+                        self.providers["gemini"] = GoogleCompletions(use_secure_storage=self.use_secure_storage)
+                        logger.info(f"Added Gemini provider from ModelManager")
+                    elif provider_name == "openai" and "openai" not in self.providers:
+                        self.providers["openai"] = OpenAICompletions(use_secure_storage=self.use_secure_storage)
+                        logger.info(f"Added OpenAI provider from ModelManager")
+                    elif provider_name == "ollama" and "ollama" not in self.providers:
+                        self.providers["ollama"] = OllamaCompletions()
+                        logger.info(f"Added Ollama provider from ModelManager")
         
         if not self.providers:
             logger.error("No providers available. Set API keys (GEMINI_API_KEY, OPENAI_API_KEY) or ensure Ollama is running.")

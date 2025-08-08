@@ -306,9 +306,10 @@ class GeminiModelProvider(ModelProvider):
         except ImportError:
             raise ImportError("Google GenAI library not installed. Install with: pip install google-generativeai")
         
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        # Support both GEMINI_API_KEY and GOOGLE_API_KEY for compatibility
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not provided")
+            raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY not provided")
         
         self.client = genai.Client(
             http_options={"api_version": "v1beta"},
@@ -355,7 +356,10 @@ class GeminiModelProvider(ModelProvider):
         """Get detailed info about a specific Gemini model"""
         try:
             model_name = f"models/{model_id}" if not model_id.startswith("models/") else model_id
-            model = await self.client.aio.models.get(name=model_name)
+            # Use the correct genai.get_model method
+            import asyncio
+            from google import genai
+            model = await asyncio.to_thread(genai.get_model, model_name)
             
             capabilities = self._get_model_capabilities(model.name)
             context_limit = self._get_context_limit(model.name)
