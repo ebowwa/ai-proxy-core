@@ -4,7 +4,7 @@ A clean, reusable API proxy for AI services
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api_demo import completions, gemini_live
+from api_layer import completions, gemini_live
 import os
 from dotenv import load_dotenv
 

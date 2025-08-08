@@ -367,7 +367,7 @@ async def gemini_websocket(websocket: WebSocket):
 **Try the HTML Demo:**
 ```bash
 # Start the FastAPI server
-python main.py
+uv run main.py
 
 # Open the HTML demo in your browser
 open examples/gemini_live_demo.html
@@ -461,7 +461,7 @@ The script will:
 If you prefer to build manually:
 
 ```bash
-python setup.py sdist bdist_wheel
+uv run python setup.py sdist bdist_wheel
 twine upload dist/*
 ```
 
