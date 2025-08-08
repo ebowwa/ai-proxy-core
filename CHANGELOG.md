@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6] - 2025-08-08
+- Remove legacy completions.py file (replaced by completion_client.py)
+- Remove deprecated CompletionsHandler export
+- Rename api folder to api_demo to clarify it's example code
+- Clean up redundant code while maintaining full functionality
+- Verified Gemini works with modern CompletionClient
+
 ## [0.3.5] - 2025-08-08
 - Clean up WebSocket file redundancies
 - Remove duplicate gemini_live_fixed.py file

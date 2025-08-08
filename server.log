@@ -1,47 +1,29 @@
 INFO:     Will watch for changes in these directories: ['/root/caringmind-machine-000/backend-python/ai-proxy-core']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [72520] using StatReload
-INFO:     Started server process [72548]
+INFO:     Started reloader process [75452] using StatReload
+INFO:     Started server process [75480]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:39132 - "GET /health HTTP/1.1" 200 OK
-Could not initialize OpenAI provider: OpenAI library not installed. Install with: pip install ai-proxy-core[openai] or pip install openai
-DEBUG: GoogleCompletions received messages: [{'role': 'user', 'content': 'Say hello in 5 words'}]
-DEBUG: Message types: [<class 'dict'>]
-DEBUG: First message: {'role': 'user', 'content': 'Say hello in 5 words'}
-DEBUG: First message keys: ['role', 'content']
-INFO:     127.0.0.1:44338 - "POST /api/chat/completions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48520 - "WebSocket /api/gemini/ws" [accepted]
-INFO:     connection open
-INFO:     connection closed
+INFO:     127.0.0.1:36894 - "POST /api/chat/completions HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:60000 - "POST /api/chat/completions HTTP/1.1" 422 Unprocessable Entity
 WARNING:  StatReload detected changes in 'ai_proxy_core/__init__.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [72548]
-INFO:     Started server process [73271]
+INFO:     Finished server process [75480]
+INFO:     Started server process [75875]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-WARNING:  Invalid HTTP request received.
-INFO:     162.142.125.113:56080 - "GET / HTTP/1.1" 200 OK
-INFO:     162.142.125.113:42372 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     162.142.125.113:42400 - "PRI %2A HTTP/2.0" 404 Not Found
-WARNING:  Invalid HTTP request received.
 WARNING:  StatReload detected changes in 'setup.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [73271]
-INFO:     Started server process [73285]
+INFO:     Finished server process [75875]
+INFO:     Started server process [75882]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     162.142.125.113:41968 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     162.142.125.113:41980 - "PRI %2A HTTP/2.0" 404 Not Found
-WARNING:  Invalid HTTP request received.
-WARNING:  Invalid HTTP request received.
-INFO:     162.142.125.113:45006 - "GET /sitemap.xml HTTP/1.1" 404 Not Found
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [73285]
-INFO:     Stopping reloader process [72520]
+INFO:     Finished server process [75882]
+INFO:     Stopping reloader process [75452]
