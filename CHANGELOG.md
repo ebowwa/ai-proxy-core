@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.5] - 2025-08-08
+- Clean up WebSocket file redundancies
+- Remove duplicate gemini_live_fixed.py file
+- Archive backup WebSocket implementation
+- Organize debug and test files into debug/ folder
+- Maintain full WebSocket functionality while reducing code duplication
+- Tested and verified all endpoints working correctly
+
 ## [0.3.4] - 2025-08-08
 - Fix GoogleCompletions message format handling for google-genai library
 - Convert complex message formats to simple string prompts for compatibility
