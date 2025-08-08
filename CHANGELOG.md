@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.7] - 2025-08-08
+- Restructure project: Move ai_proxy_core source to src/ directory
+- Rename api_demo to api_layer for clarity
+- Update documentation to use uv run instead of python
+- Remove backup file gemini_live_backup.py.old
+- Organize test files into tests/ directory
+- Create setup/ directory for build artifacts
+- Maintain package name as ai_proxy_core for PyPI compatibility
+
 ## [0.3.6] - 2025-08-08
 - Remove legacy completions.py file (replaced by completion_client.py)
 - Remove deprecated CompletionsHandler export
