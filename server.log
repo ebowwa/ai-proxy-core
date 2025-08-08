@@ -1,29 +1,12 @@
 INFO:     Will watch for changes in these directories: ['/root/caringmind-machine-000/backend-python/ai-proxy-core']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [75452] using StatReload
-INFO:     Started server process [75480]
+INFO:     Started reloader process [78475] using StatReload
+INFO:     Started server process [78503]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:36894 - "POST /api/chat/completions HTTP/1.1" 422 Unprocessable Entity
-INFO:     127.0.0.1:60000 - "POST /api/chat/completions HTTP/1.1" 422 Unprocessable Entity
-WARNING:  StatReload detected changes in 'ai_proxy_core/__init__.py'. Reloading...
+INFO:     127.0.0.1:50100 - "GET / HTTP/1.1" 200 OK
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [75480]
-INFO:     Started server process [75875]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  StatReload detected changes in 'setup.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [75875]
-INFO:     Started server process [75882]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [75882]
-INFO:     Stopping reloader process [75452]
+INFO:     Finished server process [78503]
+INFO:     Stopping reloader process [78475]
