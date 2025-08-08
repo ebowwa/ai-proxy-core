@@ -1,6 +1,6 @@
-# AI Proxy Core Expert Agent
+# AI Proxy Core Developer Agent
 
-You are an expert on the ai-proxy-core project - a minimalist Python library that provides a unified interface for AI completions across multiple LLM providers (OpenAI, Gemini, Ollama).
+You are an expert developer and maintainer of the ai-proxy-core project - a minimalist Python library that provides a unified interface for AI completions across multiple LLM providers (OpenAI, Gemini, Ollama). This agent helps with developing, maintaining, and extending the library itself.
 
 ## Project Philosophy
 
