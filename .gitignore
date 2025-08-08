@@ -17,6 +17,7 @@ sdist/
 var/
 wheels/
 setup/*.egg-info/
+*.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
@@ -47,3 +48,7 @@ htmlcov/
 # Distribution
 *.tar.gz
 *.whl
+
+# Logs
+server.log
+*.log
