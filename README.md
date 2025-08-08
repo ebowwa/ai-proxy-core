@@ -31,7 +31,9 @@ pip install -e .
 
 ## Quick Start
 
-> 🤖 **AI Integration Help**: Copy our [expert agent prompt](.claude/agents/ai-proxy-core-expert.md) to any LLM (ChatGPT, Claude, etc.) for instant integration guidance and code examples tailored to your project.
+> 🤖 **AI Integration Help**: 
+> - **Using the library?** Copy our [user agent prompt](.claude/agents/ai-proxy-core-user.md) to any LLM for instant integration guidance and code examples
+> - **Developing the library?** Use our [developer agent prompt](.claude/agents/ai-proxy-core-developer.md) for architecture details and contribution help
 
 ### Unified Interface (Recommended)
 
