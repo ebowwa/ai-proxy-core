@@ -121,15 +121,32 @@ class GoogleCompletions(BaseCompletions):
     ) -> Dict[str, Any]:
         """Create a completion from messages"""
         
+        # Debug logging
+        print(f"DEBUG: GoogleCompletions received messages: {messages}")
+        print(f"DEBUG: Message types: {[type(m) for m in messages]}")
+        if messages:
+            print(f"DEBUG: First message: {messages[0]}")
+            print(f"DEBUG: First message keys: {list(messages[0].keys()) if isinstance(messages[0], dict) else 'Not a dict'}")
+        
         try:
             # Track request start
             with self.telemetry.track_duration("completion", {"model": model, "provider": "google"}):
-                # Convert messages to Gemini format
-                contents = []
+                # Convert messages to Gemini format - use simple string format
+                # Extract just the text content from each message
+                prompt_text = ""
                 for msg in messages:
-                    parts = self._parse_content(msg.get("content", ""))
-                    role = "user" if msg.get("role") == "user" else "model"
-                    contents.append({"role": role, "parts": parts})
+                    content = msg.get("content", "")
+                    if isinstance(content, str):
+                        prompt_text += content + " "
+                    else:
+                        # For complex content, extract text parts
+                        if isinstance(content, list):
+                            for item in content:
+                                if isinstance(item, dict) and item.get("type") == "text":
+                                    prompt_text += item.get("text", "") + " "
+                
+                # Use simple string prompt for google-genai
+                contents = prompt_text.strip() if prompt_text.strip() else "Hello"
                 
                 # Configure generation
                 config = types.GenerateContentConfig(

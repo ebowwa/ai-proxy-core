@@ -103,12 +103,21 @@ class CompletionsHandler:
         try:
             # Track request start
             with self.telemetry.track_duration("completion", {"model": model, "provider": "gemini"}):
-                # Convert messages to Gemini format
-                contents = []
+                # Convert messages to simple string format for google-genai
+                prompt_text = ""
                 for msg in messages:
-                    parts = self._parse_content(msg.get("content", ""))
-                    role = "user" if msg.get("role") == "user" else "model"
-                    contents.append({"role": role, "parts": parts})
+                    content = msg.get("content", "")
+                    if isinstance(content, str):
+                        prompt_text += content + " "
+                    else:
+                        # For complex content, extract text parts
+                        if isinstance(content, list):
+                            for item in content:
+                                if isinstance(item, dict) and item.get("type") == "text":
+                                    prompt_text += item.get("text", "") + " "
+                
+                # Use simple string for google-genai
+                contents = prompt_text.strip() if prompt_text.strip() else "Hello"
             
             # Configure generation
             config = types.GenerateContentConfig(

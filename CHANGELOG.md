@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4] - 2025-08-08
+- Fix GoogleCompletions message format handling for google-genai library
+- Convert complex message formats to simple string prompts for compatibility
+- Fix message parsing to handle both string and list content types
+- Improve error handling for API responses
+- Ensure proper text extraction from structured message content
+
 ## [0.3.3] - 2025-08-04
 - Fix Gemini Live WebSocket implementation
 - Implement proper async context manager handling for sessions

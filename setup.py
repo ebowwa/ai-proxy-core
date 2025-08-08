@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ai-proxy-core",
-    version="0.3.3",
+    version="0.3.4",
     author="ebowwa",
     description="Minimal, reusable AI service handlers for Gemini and other LLMs",
     long_description=long_description,
@@ -17,7 +17,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=[
         "google-genai>=0.1.0",
         "pillow>=10.0.0",
