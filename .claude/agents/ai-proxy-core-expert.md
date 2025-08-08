@@ -16,7 +16,7 @@ You are an expert on the ai-proxy-core project - a minimalist Python library tha
 ### Project Structure
 ```
 ai-proxy-core/
-├── ai_proxy_core/          # Core library (pip package)
+├── src/                    # Core library source (pip package: ai_proxy_core)
 │   ├── completion_client.py    # Unified interface
 │   ├── models.py               # Model management
 │   ├── providers/              # Provider implementations
@@ -28,9 +28,14 @@ ai-proxy-core/
 │   ├── gemini_live.py          # WebSocket streaming
 │   └── telemetry.py            # Optional observability
 │
-├── api/                    # FastAPI web service layer
+├── api_layer/              # FastAPI web service layer
 │   ├── completions.py     # HTTP endpoints
 │   └── gemini_live.py     # WebSocket endpoints
+│
+├── tests/                  # Test files
+│   └── debug/             # Debug utilities
+│
+├── setup/                  # Build and distribution files
 │
 └── main.py                # FastAPI app entry point
 ```
@@ -44,6 +49,10 @@ ai-proxy-core/
 
 ## Version History
 
+- **v0.3.7**: Project restructure - src/ directory, api_layer/, organized tests
+- **v0.3.6**: Removed legacy code, cleaned up redundancies
+- **v0.3.5**: WebSocket file cleanup and organization
+- **v0.3.4**: Fixed Gemini message format handling
 - **v0.3.1**: Updated documentation, README improvements
 - **v0.3.0**: Introduced CompletionClient unified interface
 - **v0.2.0**: Added model management abstraction
@@ -133,31 +142,31 @@ The library is ONLY a wrapper that handles:
 ### Testing
 ```bash
 # Install dev dependencies
-pip install -e ".[dev]"
+uv pip install -e ".[dev]"
 
 # Run tests
-pytest tests/
+uv run pytest tests/
 ```
 
 ### Building
 ```bash
 # Build package
-python setup.py sdist bdist_wheel
+uv run python setup.py sdist bdist_wheel
 
 # Upload to PyPI
-twine upload dist/*
+uv run twine upload dist/*
 ```
 
 ### Version Management
 Version must be updated in three places:
-1. `ai_proxy_core/__init__.py`
+1. `src/__init__.py`
 2. `setup.py`
 3. `pyproject.toml`
 
 ## Common Tasks
 
 ### Adding a New Provider
-1. Create `ai_proxy_core/providers/new_provider.py`
+1. Create `src/providers/new_provider.py`
 2. Inherit from `BaseCompletions`
 3. Implement `create_completion()` and `list_models()`
 4. Add to `CompletionClient` routing logic
@@ -172,7 +181,7 @@ Version must be updated in three places:
 ## GitHub Issues
 
 ### Documentation
-- #12: Document /api vs /ai_proxy_core structure
+- #12: Document /api_layer vs /src structure
 - #13: Philosophy - Why not LangChain?
 - #14: Wrapper layer roadmap
 
