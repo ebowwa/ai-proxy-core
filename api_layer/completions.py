@@ -140,3 +140,21 @@ async def create_chat_completion(request: CompletionRequest) -> CompletionRespon
     #     # logger.info(f"API call from client: {token_info.client_id}")
     
     return await handler.create_completion(request)
+
+
+@router.get("/models")
+async def list_models(provider: Optional[str] = Query(None, description="Filter by provider name")) -> Dict[str, Any]:
+    """List available models from all providers or a specific provider"""
+    handler = get_handler()
+    
+    try:
+        models = await handler.client.list_models(provider=provider)
+        return {
+            "object": "list",
+            "data": models
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error listing models: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

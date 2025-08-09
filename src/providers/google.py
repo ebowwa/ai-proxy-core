@@ -226,6 +226,21 @@ class GoogleCompletions(BaseCompletions):
             )
             raise
     
-    def list_models(self) -> List[str]:
-        """List available Gemini models"""
-        return list(self.MODEL_MAPPING.keys())
+    async def list_models(self) -> List[str]:
+        """List available Gemini models from the API"""
+        try:
+            # Query the actual Google Gemini API for available models
+            models_response = await self.client.aio.models.list()
+            model_names = []
+            async for model in models_response:
+                # Extract the model name without the "models/" prefix
+                model_id = model.name.replace("models/", "") if hasattr(model, 'name') else str(model)
+                if model_id and not model_id.startswith("tunedModels/"):
+                    model_names.append(model_id)
+            
+            return model_names if model_names else list(self.MODEL_MAPPING.keys())
+                
+        except Exception as e:
+            logger.warning(f"Could not fetch models from Google API: {e}")
+            # Fall back to hardcoded list if API call fails
+            return list(self.MODEL_MAPPING.keys())

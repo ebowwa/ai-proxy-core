@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.8] - 2025-08-09
+- Add `/api/models` endpoint for listing available models
+- Fix GoogleCompletions to query actual Google Gemini API for model list (60+ models!)
+- Make list_models() async to properly query provider APIs
+- Fix ModelManager fallback logic when no providers are registered
+- Improve CompletionClient to handle both sync and async list_models methods
+- Update .env.example with comprehensive configuration options
+- Add support for filtering models by provider (`/api/models?provider=gemini`)
+
 ## [0.3.7] - 2025-08-08
 - Restructure project: Move ai_proxy_core source to src/ directory
 - Rename api_demo to api_layer for clarity

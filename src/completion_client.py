@@ -240,38 +240,63 @@ class CompletionClient:
             if provider not in self.providers:
                 raise ValueError(f"Provider '{provider}' not available")
             
-            # Use provider's list_models method
-            models = self.providers[provider].list_models()
+            # Use provider's list_models method (handle both sync and async)
+            provider_instance = self.providers[provider]
+            if hasattr(provider_instance, 'list_models'):
+                import asyncio
+                import inspect
+                
+                list_models_method = provider_instance.list_models
+                if inspect.iscoroutinefunction(list_models_method):
+                    # It's async, await it
+                    models = await list_models_method()
+                else:
+                    # It's sync, call it directly
+                    models = list_models_method()
+            else:
+                models = []
+            
             return [{"id": model, "provider": provider} for model in models]
         
         # List from all providers via model manager
         try:
             model_infos = await self.model_manager.list_all_models()
-            return [
-                {
-                    "id": model.id,
-                    "name": model.name,
-                    "provider": model.provider,
-                    "context_limit": model.context_limit,
-                    "capabilities": model.capabilities,
-                    "status": model.status
-                }
-                for model in model_infos
-            ]
+            if model_infos:  # Only return if we actually got models
+                return [
+                    {
+                        "id": model.id,
+                        "name": model.name,
+                        "provider": model.provider,
+                        "context_limit": model.context_limit,
+                        "capabilities": model.capabilities,
+                        "status": model.status
+                    }
+                    for model in model_infos
+                ]
         except Exception as e:
             logger.warning(f"Could not list models from model manager: {e}")
-            
-            # Fallback to provider-specific listings
-            all_models = []
-            for provider_name, provider_instance in self.providers.items():
-                try:
-                    models = provider_instance.list_models()
+        
+        # Fallback to provider-specific listings (also used when model_infos is empty)
+        all_models = []
+        for provider_name, provider_instance in self.providers.items():
+            try:
+                if hasattr(provider_instance, 'list_models'):
+                    import inspect
+                    
+                    list_models_method = provider_instance.list_models
+                    if inspect.iscoroutinefunction(list_models_method):
+                        # It's async, await it
+                        models = await list_models_method()
+                    else:
+                        # It's sync, call it directly
+                        models = list_models_method()
+                    
                     for model in models:
                         all_models.append({"id": model, "provider": provider_name})
-                except Exception as e:
-                    logger.warning(f"Could not list models from {provider_name}: {e}")
-            
-            return all_models
+            except Exception as e:
+                logger.warning(f"Could not list models from {provider_name}: {e}")
+        
+        return all_models
     
     def get_available_providers(self) -> List[str]:
         """Get list of available provider names"""
