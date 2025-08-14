@@ -61,3 +61,9 @@ all = [
 [tool.setuptools]
 package-dir = {"ai_proxy_core" = "src"}
 packages = ["ai_proxy_core", "ai_proxy_core.providers"]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "flake8>=7.3.0",
+]
