@@ -7,7 +7,7 @@ import logging
 from typing import Optional, List, Dict, Any, Union
 
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from datetime import datetime
 from ai_proxy_core import CompletionClient
@@ -37,8 +37,13 @@ class CompletionRequest(BaseModel):
         description="Response format: 'text' or {'type': 'json_object'} for structured output"
     )
     system_instruction: Optional[str] = Field(None, description="System instruction for the model")
-    # Basic safety settings
     safety_settings: Optional[List[Dict[str, str]]] = Field(None, description="Safety settings")
+    app: Optional[str] = None
+    client_id: Optional[str] = None
+    device: Optional[str] = None
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None
+    request_id: Optional[str] = None
 
 
 class CompletionResponse(BaseModel):
@@ -70,13 +75,10 @@ class CompletionsHandler:
         #         logger.warning("Auth requested but security module not available")
         #         self.auth_enabled = False
     
-    async def create_completion(self, request: CompletionRequest) -> CompletionResponse:
+    async def create_completion(self, request: CompletionRequest, client_context: Optional[Dict[str, Any]] = None) -> CompletionResponse:
         """Create a completion from messages - delegates to CompletionClient"""
         try:
-            # Convert Pydantic messages to dict format
             messages = [msg.dict() for msg in request.messages]
-            
-            # Call the unified completion client
             result = await self.client.create_completion(
                 messages=messages,
                 model=request.model,
@@ -84,10 +86,9 @@ class CompletionsHandler:
                 max_tokens=request.max_tokens,
                 response_format=request.response_format,
                 system_instruction=request.system_instruction,
-                safety_settings=request.safety_settings
+                safety_settings=request.safety_settings,
+                client_context=client_context
             )
-            
-            # Convert result dict to CompletionResponse
             return CompletionResponse(**result)
             
         except ValueError as e:
@@ -111,35 +112,57 @@ def get_handler():
 
 
 @router.post("/chat/completions")
-async def create_chat_completion(request: CompletionRequest) -> CompletionResponse:
+async def create_chat_completion(request: CompletionRequest, http_request: Request) -> CompletionResponse:
     """OpenAI-compatible chat completions endpoint"""
     handler = get_handler()
-    
-    # TODO: Authentication implementation point
-    # When security module is complete, add optional auth here:
-    # 
-    # from fastapi import Header
-    # authorization: Optional[str] = Header(None)
-    # 
-    # if handler.auth_enabled:  # Check if auth is configured
-    #     if not authorization:
-    #         raise HTTPException(status_code=401, detail="Authorization required")
-    #     
-    #     # Validate Bearer token
-    #     token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
-    #     token_info = handler.auth.verify_token(token)
-    #     
-    #     if not token_info:
-    #         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    #     
-    #     # Check rate limits
-    #     if not handler.auth.check_rate_limit(token_info):
-    #         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    #     
-    #     # Could also add usage tracking, audit logging, etc.
-    #     # logger.info(f"API call from client: {token_info.client_id}")
-    
-    return await handler.create_completion(request)
+    headers = http_request.headers
+
+    def parse_forwarded_ip(forwarded_val: str) -> Optional[str]:
+        for part in forwarded_val.split(","):
+            for kv in part.split(";"):
+                k, sep, v = kv.strip().partition("=")
+                if k.lower() == "for" and sep:
+                    v = v.strip().strip('"').strip("'")
+                    if v.startswith("[") and v.endswith("]"):
+                        v = v[1:-1]
+                    return v
+        return None
+
+    xff = headers.get("x-forwarded-for", "")
+    forwarded = headers.get("forwarded", "")
+    x_real_ip = headers.get("x-real-ip", "")
+    ip = None
+    if xff:
+        ip = xff.split(",")[0].strip()
+    if not ip and forwarded:
+        ip = parse_forwarded_ip(forwarded)
+    if not ip and x_real_ip:
+        ip = x_real_ip.strip()
+    if not ip and http_request.client:
+        ip = http_request.client.host
+
+    body_ctx: Dict[str, Optional[str]] = {
+        "app": request.app,
+        "client_id": request.client_id,
+        "device": request.device,
+        "user_id": request.user_id,
+        "session_id": request.session_id,
+        "request_id": request.request_id,
+    }
+    header_ctx: Dict[str, Optional[str]] = {
+        "app": headers.get("x-app"),
+        "client_id": headers.get("x-client-id"),
+        "device": headers.get("x-device"),
+        "user_id": headers.get("x-user-id"),
+        "session_id": headers.get("x-session-id"),
+        "request_id": headers.get("x-request-id"),
+    }
+    client_context = {k: (body_ctx.get(k) or header_ctx.get(k)) for k in body_ctx.keys()}
+    client_context["ip"] = ip
+    if not client_context.get("client_id") and ip:
+        client_context["client_id"] = ip
+
+    return await handler.create_completion(request, client_context)
 
 
 @router.get("/models")

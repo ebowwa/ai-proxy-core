@@ -498,6 +498,60 @@ chmod +x release.sh
 # Release a new version
 ./release.sh 0.1.9
 ```
+## Client identification and IP fallback
+
+To attribute requests to a product/app or device, the API accepts optional client metadata on both REST and WebSocket paths. If client_id is not provided, the server uses the client IP as a fallback (works for curl/CLI users too).
+
+- Optional fields (REST body and WS config message):
+  - app
+  - client_id
+  - device
+  - user_id
+  - session_id
+  - request_id
+
+- Optional HTTP headers (used when body fields are absent):
+  - X-App
+  - X-Client-Id
+  - X-Device
+  - X-User-Id
+  - X-Session-Id
+  - X-Request-Id
+
+- IP resolution order:
+  1) X-Forwarded-For (first IP)
+  2) Forwarded header (for= token, supports quotes and IPv6 [brackets])
+  3) X-Real-IP
+  4) Socket peer address
+
+- Precedence:
+  - Body values override headers.
+  - If client_id is missing, it defaults to the resolved IP.
+
+- Telemetry:
+  - Providers tag counters/durations with:
+    - client.app
+    - client.device
+    - client.id
+    - client.ip
+
+### REST example (no client_id provided)
+```bash
+curl -X POST http://localhost:8000/api/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"gemini-1.5-flash","messages":[{"role":"user","content":"Hello"}]}'
+```
+If behind a proxy, include X-Forwarded-For or X-Real-IP so the correct source IP is used.
+
+### WebSocket example config
+After connecting to ws://localhost:8000/api/gemini/ws send:
+```json
+{"type":"config","app":"caringmind","device":"cli"}
+```
+If no client_id is present, the server computes it from the IP and acknowledges with:
+```json
+{"type":"config_success","message":"Configuration acknowledged","client_id":"<derived-ip>","ip":"<derived-ip>"}
+```
 
 The script will:
 1. Show current version and validate the new version format
