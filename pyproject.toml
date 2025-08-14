@@ -24,8 +24,6 @@ dependencies = [
     "google-genai>=0.1.0",
     "pillow>=10.0.0",
     "aiohttp>=3.8.0",  # For Ollama
-    "PyPDF2>=3.0.0",  # For PDF processing
-    "python-docx>=0.8.11",  # For DOCX processing
 ]
 keywords = ["ai", "gemini", "llm", "api", "proxy"]
 
