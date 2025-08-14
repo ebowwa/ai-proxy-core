@@ -85,26 +85,64 @@ class GoogleCompletions(BaseCompletions):
         self.telemetry = get_telemetry()
     
     def _parse_content(self, content: Union[str, List[Dict[str, Any]]]) -> List[Any]:
-        """Parse message content into Gemini-compatible format"""
         if isinstance(content, str):
             return [content]
         
         parts = []
         for item in content:
-            if item["type"] == "text":
-                parts.append(item["text"])
-            elif item["type"] == "image_url":
-                # Handle base64 or URL images
-                image_data = item["image_url"]["url"]
-                if image_data.startswith("data:"):
-                    # Extract base64 data
-                    base64_data = image_data.split(",")[1]
+            t = item.get("type")
+            if t == "text":
+                parts.append(item.get("text", ""))
+            elif t == "image_url":
+                image_data = item.get("image_url", {}).get("url")
+                if not image_data:
+                    continue
+                if isinstance(image_data, str) and image_data.startswith("data:"):
+                    header, base64_data = image_data.split(",", 1)
                     image_bytes = base64.b64decode(base64_data)
                     image = PIL.Image.open(io.BytesIO(image_bytes))
                     parts.append(image)
                 else:
-                    # Handle URL
                     parts.append({"mime_type": "image/jpeg", "data": image_data})
+            elif t == "audio_url":
+                audio_data = item.get("audio_url", {}).get("url")
+                if not audio_data or not isinstance(audio_data, str):
+                    continue
+                if audio_data.startswith("data:"):
+                    header, base64_data = audio_data.split(",", 1)
+                    mime = "audio/mp3"
+                    try:
+                        mime = header.split("data:")[1].split(";")[0] or "audio/mp3"
+                    except Exception:
+                        pass
+                    audio_bytes = base64.b64decode(base64_data)
+                    parts.append({"mime_type": mime, "data": audio_bytes})
+            elif t == "input_audio":
+                audio_obj = item.get("input_audio", {}) if "input_audio" in item else item
+                base64_payload = audio_obj.get("data") or audio_obj.get("base64")
+                fmt = audio_obj.get("format")
+                if not base64_payload:
+                    continue
+                mime = None
+                if fmt:
+                    f = str(fmt).lower()
+                    if f in ("wav", "pcm"):
+                        mime = "audio/wav" if f == "wav" else "audio/pcm"
+                    elif f in ("mp3", "mpeg"):
+                        mime = "audio/mpeg"
+                    elif f in ("aac",):
+                        mime = "audio/aac"
+                    elif f in ("ogg", "vorbis", "oga"):
+                        mime = "audio/ogg"
+                    elif f in ("flac",):
+                        mime = "audio/flac"
+                if not mime:
+                    mime = "audio/mpeg"
+                try:
+                    audio_bytes = base64.b64decode(base64_payload)
+                except Exception:
+                    continue
+                parts.append({"mime_type": mime, "data": audio_bytes})
         
         return parts
     
@@ -131,22 +169,14 @@ class GoogleCompletions(BaseCompletions):
         try:
             # Track request start
             with self.telemetry.track_duration("completion", {"model": model, "provider": "google"}):
-                # Convert messages to Gemini format - use simple string format
-                # Extract just the text content from each message
-                prompt_text = ""
+                contents_parts: List[Any] = []
                 for msg in messages:
                     content = msg.get("content", "")
                     if isinstance(content, str):
-                        prompt_text += content + " "
-                    else:
-                        # For complex content, extract text parts
-                        if isinstance(content, list):
-                            for item in content:
-                                if isinstance(item, dict) and item.get("type") == "text":
-                                    prompt_text += item.get("text", "") + " "
-                
-                # Use simple string prompt for google-genai
-                contents = prompt_text.strip() if prompt_text.strip() else "Hello"
+                        contents_parts.append(content)
+                    elif isinstance(content, list):
+                        contents_parts.extend(self._parse_content(content))
+                contents = contents_parts if contents_parts else "Hello"
                 
                 # Configure generation
                 config = types.GenerateContentConfig(
