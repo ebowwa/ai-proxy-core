@@ -292,6 +292,50 @@ async def create_completion(request: CompletionRequest):
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+### Audio in Chat Completions (Gemini)
+
+The completions endpoint supports audio inputs for Google/Gemini via multimodal content:
+- data URL audio_url entries (e.g., data:audio/mp3;base64,...)
+- OpenAI-style input_audio objects with base64 data and format
+
+Example request messages:
+```json
+[
+  {
+    "role": "user",
+    "content": [
+      {"type": "text", "text": "Transcribe and summarize this audio:"},
+      {
+        "type": "audio_url",
+        "audio_url": {
+          "url": "data:audio/mp3;base64,AAA..."
+        }
+      }
+    ]
+  }
+]
+```
+
+OpenAI-style input_audio:
+```json
+[
+  {
+    "role": "user",
+    "content": [
+      {"type": "text", "text": "Please analyze this clip."},
+      {
+        "type": "input_audio",
+        "input_audio": {
+          "data": "AAA...", 
+          "format": "mp3"
+        }
+      }
+    ]
+  }
+]
+```
+
+Supported formats include MP3, WAV, AAC, OGG, FLAC. For WebSocket (Live), only PCM is supported at this time; non-PCM will be rejected with a clear message.
 ```
 
 #### WebSocket for Gemini Live (Fixed in v0.3.3)
@@ -375,7 +419,14 @@ uv run main.py
 open examples/gemini_live_demo.html
 ```
 
-The demo provides a full-featured chat interface with WebSocket connection to Gemini Live. Note: Audio input requires PCM format conversion (not yet implemented).
+The demo provides a full-featured chat interface with WebSocket connection to Gemini Live.
+
+Note on audio (WebSocket):
+- Audio input is supported for PCM only (16-bit PCM). Send base64-encoded PCM and it will be forwarded to Gemini Live.
+- Non-PCM inputs (e.g., WebM/Opus) are rejected with: "Audio requires PCM format - WebM conversion not yet implemented".
+- Example client payloads:
+  - Raw base64 string: {"type": "audio", "data": "<base64_pcm>"}
+  - Object form: {"type": "audio", "data": {"base64": "<base64_pcm>", "mime_type": "audio/pcm"}}
 
 ## Features
 
