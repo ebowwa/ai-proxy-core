@@ -84,11 +84,47 @@ async def gemini_websocket(websocket: WebSocket):
                                 logger.info("Sent to Gemini successfully")
                                 
                         elif msg_type == "audio":
-                            # Audio not supported yet
-                            await websocket.send_json({
-                                "type": "system",
-                                "data": "Audio input not yet supported"
-                            })
+                            data = message.get("data")
+                            mime_type = None
+                            base64_payload = None
+                            fmt = None
+
+                            if isinstance(data, str):
+                                base64_payload = data
+                                mime_type = "audio/pcm"
+                            elif isinstance(data, dict):
+                                base64_payload = data.get("base64") or data.get("data") or data.get("b64")
+                                mime_type = data.get("mime_type") or data.get("mimeType")
+                                fmt = data.get("format") or data.get("codec")
+
+                            if not mime_type and base64_payload:
+                                mime_type = "audio/pcm"
+
+                            non_pcm = (mime_type and mime_type.lower() != "audio/pcm") or (fmt and "webm" in fmt.lower())
+                            if non_pcm:
+                                await websocket.send_json({
+                                    "type": "system",
+                                    "data": "Audio requires PCM format - WebM conversion not yet implemented"
+                                })
+                                continue
+
+                            if not base64_payload:
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "data": "Invalid audio payload: expected base64 data"
+                                })
+                                continue
+
+                            try:
+                                audio_bytes = base64.b64decode(base64_payload)
+                            except Exception:
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "data": "Invalid base64 audio payload"
+                                })
+                                continue
+
+                            await session.send(input={"data": audio_bytes, "mime_type": "audio/pcm"})
                             
                 except WebSocketDisconnect:
                     logger.info("Client disconnected")
