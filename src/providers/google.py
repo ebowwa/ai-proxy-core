@@ -5,6 +5,7 @@ import os
 import base64
 import io
 import logging
+import mimetypes
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 
@@ -84,6 +85,7 @@ class GoogleCompletions(BaseCompletions):
         )
         self.telemetry = get_telemetry()
     
+    
     def _parse_content(self, content: Union[str, List[Dict[str, Any]]]) -> List[Any]:
         if isinstance(content, str):
             return [content]
@@ -143,6 +145,62 @@ class GoogleCompletions(BaseCompletions):
                 except Exception:
                     continue
                 parts.append({"mime_type": mime, "data": audio_bytes})
+            elif t == "pdf":
+                pdf_data = item.get("pdf", {})
+                if "data" in pdf_data:
+                    if isinstance(pdf_data["data"], str) and pdf_data["data"].startswith("data:"):
+                        header, base64_data = pdf_data["data"].split(",", 1)
+                        pdf_bytes = base64.b64decode(base64_data)
+                    else:
+                        pdf_bytes = base64.b64decode(pdf_data["data"])
+                    parts.append({"mime_type": "application/pdf", "data": pdf_bytes})
+                elif "file_path" in pdf_data:
+                    file_path = pdf_data["file_path"]
+                    if os.path.exists(file_path):
+                        with open(file_path, 'rb') as f:
+                            pdf_bytes = f.read()
+                        parts.append({"mime_type": "application/pdf", "data": pdf_bytes})
+            elif t == "video":
+                video_data = item.get("video", {})
+                if "data" in video_data:
+                    if isinstance(video_data["data"], str) and video_data["data"].startswith("data:"):
+                        header, base64_data = video_data["data"].split(",", 1)
+                        mime_type = header.split("data:")[1].split(";")[0] or "video/mp4"
+                        video_bytes = base64.b64decode(base64_data)
+                    else:
+                        video_bytes = base64.b64decode(video_data["data"])
+                        mime_type = video_data.get("mime_type", "video/mp4")
+                    
+                    parts.append({"mime_type": mime_type, "data": video_bytes})
+                elif "file_path" in video_data:
+                    file_path = video_data["file_path"]
+                    if os.path.exists(file_path):
+                        with open(file_path, 'rb') as f:
+                            video_bytes = f.read()
+                        mime_type, _ = mimetypes.guess_type(file_path)
+                        if not mime_type or not mime_type.startswith("video/"):
+                            mime_type = "video/mp4"
+                        parts.append({"mime_type": mime_type, "data": video_bytes})
+            elif t == "document":
+                doc_data = item.get("document", {})
+                if "data" in doc_data:
+                    if isinstance(doc_data["data"], str) and doc_data["data"].startswith("data:"):
+                        header, base64_data = doc_data["data"].split(",", 1)
+                        doc_bytes = base64.b64decode(base64_data)
+                        mime_type = header.split("data:")[1].split(";")[0]
+                    else:
+                        doc_bytes = base64.b64decode(doc_data["data"])
+                        mime_type = doc_data.get("mime_type", "text/plain")
+                    parts.append({"mime_type": mime_type, "data": doc_bytes})
+                elif "file_path" in doc_data:
+                    file_path = doc_data["file_path"]
+                    if os.path.exists(file_path):
+                        mime_type, _ = mimetypes.guess_type(file_path)
+                        if not mime_type:
+                            mime_type = "text/plain"
+                        with open(file_path, 'rb') as f:
+                            doc_bytes = f.read()
+                        parts.append({"mime_type": mime_type, "data": doc_bytes})
         
         return parts
     
