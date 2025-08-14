@@ -5,6 +5,7 @@ import os
 import base64
 import io
 import logging
+import mimetypes
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 
@@ -84,6 +85,39 @@ class GoogleCompletions(BaseCompletions):
         )
         self.telemetry = get_telemetry()
     
+    def _extract_pdf_text(self, pdf_bytes: bytes) -> str:
+        """Extract text from PDF bytes"""
+        try:
+            import PyPDF2
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+            text_content = ""
+            for page in pdf_reader.pages:
+                text_content += page.extract_text() + "\n"
+            return text_content
+        except Exception as e:
+            logger.warning(f"Failed to extract text from PDF: {e}")
+            return ""
+    
+    def _extract_document_text(self, doc_bytes: bytes, mime_type: Optional[str], file_path: Optional[str] = None) -> str:
+        """Extract text from various document formats"""
+        try:
+            if (mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" or 
+                (file_path and file_path.endswith('.docx'))):
+                import docx
+                doc = docx.Document(io.BytesIO(doc_bytes))
+                text_content = ""
+                for paragraph in doc.paragraphs:
+                    text_content += paragraph.text + "\n"
+                return text_content
+            elif (mime_type == "text/plain" or 
+                  (file_path and file_path.endswith('.txt'))):
+                return doc_bytes.decode('utf-8', errors='ignore')
+            else:
+                return doc_bytes.decode('utf-8', errors='ignore')
+        except Exception as e:
+            logger.warning(f"Failed to extract text from document: {e}")
+            return ""
+    
     def _parse_content(self, content: Union[str, List[Dict[str, Any]]]) -> List[Any]:
         if isinstance(content, str):
             return [content]
@@ -143,6 +177,73 @@ class GoogleCompletions(BaseCompletions):
                 except Exception:
                     continue
                 parts.append({"mime_type": mime, "data": audio_bytes})
+            elif t == "pdf":
+                pdf_data = item.get("pdf", {})
+                if "data" in pdf_data:
+                    if isinstance(pdf_data["data"], str) and pdf_data["data"].startswith("data:"):
+                        header, base64_data = pdf_data["data"].split(",", 1)
+                        pdf_bytes = base64.b64decode(base64_data)
+                    else:
+                        pdf_bytes = base64.b64decode(pdf_data["data"])
+                    
+                    text_content = self._extract_pdf_text(pdf_bytes)
+                    if text_content.strip():
+                        parts.append(f"PDF Content:\n{text_content}")
+                elif "file_path" in pdf_data:
+                    file_path = pdf_data["file_path"]
+                    if os.path.exists(file_path):
+                        with open(file_path, 'rb') as f:
+                            pdf_bytes = f.read()
+                        if len(pdf_bytes) > 20 * 1024 * 1024:
+                            parts.append({"mime_type": "application/pdf", "data": pdf_bytes})
+                        else:
+                            text_content = self._extract_pdf_text(pdf_bytes)
+                            if text_content.strip():
+                                parts.append(f"PDF Content:\n{text_content}")
+            elif t == "video":
+                video_data = item.get("video", {})
+                if "data" in video_data:
+                    if isinstance(video_data["data"], str) and video_data["data"].startswith("data:"):
+                        header, base64_data = video_data["data"].split(",", 1)
+                        mime_type = header.split("data:")[1].split(";")[0] or "video/mp4"
+                        video_bytes = base64.b64decode(base64_data)
+                    else:
+                        video_bytes = base64.b64decode(video_data["data"])
+                        mime_type = video_data.get("mime_type", "video/mp4")
+                    
+                    parts.append({"mime_type": mime_type, "data": video_bytes})
+                elif "file_path" in video_data:
+                    file_path = video_data["file_path"]
+                    if os.path.exists(file_path):
+                        with open(file_path, 'rb') as f:
+                            video_bytes = f.read()
+                        mime_type, _ = mimetypes.guess_type(file_path)
+                        if not mime_type or not mime_type.startswith("video/"):
+                            mime_type = "video/mp4"
+                        parts.append({"mime_type": mime_type, "data": video_bytes})
+            elif t == "document":
+                doc_data = item.get("document", {})
+                if "data" in doc_data:
+                    if isinstance(doc_data["data"], str) and doc_data["data"].startswith("data:"):
+                        header, base64_data = doc_data["data"].split(",", 1)
+                        doc_bytes = base64.b64decode(base64_data)
+                        mime_type = header.split("data:")[1].split(";")[0]
+                    else:
+                        doc_bytes = base64.b64decode(doc_data["data"])
+                        mime_type = doc_data.get("mime_type", "text/plain")
+                    
+                    text_content = self._extract_document_text(doc_bytes, mime_type)
+                    if text_content:
+                        parts.append(f"Document Content:\n{text_content}")
+                elif "file_path" in doc_data:
+                    file_path = doc_data["file_path"]
+                    if os.path.exists(file_path):
+                        mime_type, _ = mimetypes.guess_type(file_path)
+                        with open(file_path, 'rb') as f:
+                            doc_bytes = f.read()
+                        text_content = self._extract_document_text(doc_bytes, mime_type, file_path)
+                        if text_content:
+                            parts.append(f"Document Content:\n{text_content}")
         
         return parts
     
