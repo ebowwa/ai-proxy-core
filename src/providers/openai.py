@@ -85,8 +85,16 @@ class OpenAICompletions(BaseCompletions):
         """Create a completion from messages"""
         
         try:
-            # Track request start
-            with self.telemetry.track_duration("completion", {"model": model, "provider": "openai"}):
+            client_ctx = kwargs.get("client_context") or {}
+            client_attrs = {
+                "client.app": client_ctx.get("app"),
+                "client.device": client_ctx.get("device"),
+                "client.id": client_ctx.get("client_id"),
+                "client.ip": client_ctx.get("ip"),
+            }
+            base_attrs = {"model": model, "provider": "openai"}
+            base_attrs_with_client = {**base_attrs, **{k: v for k, v in client_attrs.items() if v}}
+            with self.telemetry.track_duration("completion", base_attrs_with_client):
                 # Build request parameters
                 params = {
                     "model": model,
@@ -111,10 +119,9 @@ class OpenAICompletions(BaseCompletions):
                 # Make the API call
                 response = await self.client.chat.completions.create(**params)
                 
-                # Increment success counter
                 self.telemetry.request_counter.add(
                     1, 
-                    {"model": model, "status": "success", "provider": "openai"}
+                    {**base_attrs_with_client, "status": "success"}
                 )
                 
                 # Return standardized response
@@ -140,10 +147,9 @@ class OpenAICompletions(BaseCompletions):
             
         except Exception as e:
             logger.error(f"OpenAI completion error: {e}")
-            # Increment error counter
             self.telemetry.request_counter.add(
                 1, 
-                {"model": model, "status": "error", "provider": "openai", "error_type": type(e).__name__}
+                {**base_attrs_with_client, "status": "error", "error_type": type(e).__name__}
             )
             raise
     

@@ -47,8 +47,16 @@ class OllamaCompletions(BaseCompletions):
         """Create a completion from messages"""
         
         try:
-            # Track request start
-            with self.telemetry.track_duration("completion", {"model": model, "provider": "ollama"}):
+            client_ctx = kwargs.get("client_context") or {}
+            client_attrs = {
+                "client.app": client_ctx.get("app"),
+                "client.device": client_ctx.get("device"),
+                "client.id": client_ctx.get("client_id"),
+                "client.ip": client_ctx.get("ip"),
+            }
+            base_attrs = {"model": model, "provider": "ollama"}
+            base_attrs_with_client = {**base_attrs, **{k: v for k, v in client_attrs.items() if v}}
+            with self.telemetry.track_duration("completion", base_attrs_with_client):
                 
                 # Build request payload
                 payload = {
@@ -80,10 +88,9 @@ class OllamaCompletions(BaseCompletions):
                         
                         data = await response.json()
                 
-                # Increment success counter
                 self.telemetry.request_counter.add(
                     1, 
-                    {"model": model, "status": "success", "provider": "ollama"}
+                    {**base_attrs_with_client, "status": "success"}
                 )
                 
                 # Return standardized response
@@ -108,10 +115,9 @@ class OllamaCompletions(BaseCompletions):
             
         except Exception as e:
             logger.error(f"Ollama completion error: {e}")
-            # Increment error counter
             self.telemetry.request_counter.add(
                 1, 
-                {"model": model, "status": "error", "provider": "ollama", "error_type": type(e).__name__}
+                {**base_attrs_with_client, "status": "error", "error_type": type(e).__name__}
             )
             raise
     
