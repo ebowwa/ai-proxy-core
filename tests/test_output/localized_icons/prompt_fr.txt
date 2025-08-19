@@ -1,0 +1,14 @@
+Original prompt:
+
+            Generate a modern app icon for a privacy-focused camera application:
+            - Turquoise/teal gradient background (#00AFAA to #00CFCC)
+            - White camera icon in center
+            - French text "PhotosPropres" in clean, elegant font below the camera
+            - Small sparkle accent for privacy
+            - Professional appearance
+            - iOS app store style with rounded corners
+            - Text should be clearly readable with French aesthetic
+            
+
+Revised prompt:
+Create a modern app icon reflecting a professional appearance, designed in the style of those found in the iOS app store. It should contain a turquoise to teal gradient background moving from color #00AFAA to #00CFCC. The center of the icon should feature a white camera design, symbolic of its function. Below the camera, include the French text 'PhotosPropres' written in an elegant, clean font, showcasing a French aesthetic. This text must be clearly readable. To underscore the privacy aspect of the app, add a small sparkle accent. The icon should have rounded corners for a sleek, modern look.

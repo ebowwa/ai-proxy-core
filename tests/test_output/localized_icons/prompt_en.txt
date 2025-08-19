@@ -1,0 +1,14 @@
+Original prompt:
+
+            Generate a modern app icon for a privacy-focused camera application:
+            - Turquoise/teal gradient background (#00AFAA to #00CFCC)
+            - White camera icon in center
+            - Text "CleanShots" in clean, modern font below the camera
+            - Small sparkle accent for privacy
+            - Professional appearance
+            - iOS app store style with rounded corners
+            - Text should be clearly readable and well-integrated
+            
+
+Revised prompt:
+Visualize a professional and modern application icon that adheres to the style of the iOS App Store with rounded corners. The background should be a gradient, starting with turquoise (#00AFAA) at the top and transitioning to teal (#00CFCC) at the bottom. Centered within this backdrop, envision a pristine white camera icon. Below the camera, include the neatly integrated and clearly readable text 'CleanShots' in a contemporary typeface. As a final detail, incorporate a small sparkle accent somewhere within the design to symbolize the application's commitment to privacy.
