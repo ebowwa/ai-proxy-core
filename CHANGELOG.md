@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.4.0] - 2025-08-19
+### Added
+- **Image Generation Support**: New GPT4oImageProvider for DALL-E 3 image generation
+- Support for multiple image sizes (SQUARE, LANDSCAPE, PORTRAIT)
+- Image quality options (STANDARD, HD)
+- Style options (VIVID, NATURAL)
+- Image editing capabilities with optional masks
+- Azure OpenAI image generation support
+- Localized image generation for app internationalization
+- C2PA metadata extraction for AI-generated content authenticity
+- Comprehensive test suite for image generation
+
+### Changed
+- Updated package structure to include image providers
+- Enhanced README with image generation examples
+
+### Technical
+- Abstract provider pattern for future image generation services
+- Integration with existing BaseCompletions architecture
+- Full compatibility with uv package manager
+
+## [0.3.9] - 2025-08-09
+- Version bump for PyPI release
+
 ## [0.3.8] - 2025-08-09
 - Add `/api/models` endpoint for listing available models
 - Fix GoogleCompletions to query actual Google Gemini API for model list (60+ models!)

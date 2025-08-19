@@ -1,6 +1,6 @@
 # AI Proxy Core
 
-A unified Python package providing a single interface for AI completions across multiple providers (OpenAI, Gemini, Ollama). Features intelligent model management, automatic provider routing, and zero-config setup.
+A unified Python package providing a single interface for AI completions across multiple providers (OpenAI, Gemini, Ollama), plus **image generation capabilities** (v0.4.0+). Features intelligent model management, automatic provider routing, zero-config setup, and abstract image generation with DALL-E 3.
 
 > 💡 **Why not LangChain?** Read our [philosophy and architectural rationale](https://github.com/ebowwa/ai-proxy-core/issues/13) for choosing simplicity over complexity.
 
@@ -15,7 +15,7 @@ pip install ai-proxy-core
 
 With specific providers (optional dependencies):
 ```bash
-pip install ai-proxy-core[openai]     # OpenAI support
+pip install ai-proxy-core[openai]     # OpenAI support (includes image generation)
 pip install ai-proxy-core[anthropic]  # Anthropic support (coming soon)
 pip install ai-proxy-core[telemetry]  # OpenTelemetry support
 pip install ai-proxy-core[all]        # Everything
@@ -147,6 +147,80 @@ response = await ollama.create_completion(
 ```
 
 See [examples/ollama_complete_guide.py](examples/ollama_complete_guide.py) for comprehensive examples including error handling, streaming, and advanced features.
+
+## Image Generation (v0.4.0+)
+
+### Generate Images with DALL-E 3
+
+```python
+from ai_proxy_core import GPT4oImageProvider, ImageSize, ImageQuality, ImageStyle
+
+# Initialize the provider
+provider = GPT4oImageProvider(api_key="your-openai-api-key")
+
+# Generate an image
+response = provider.generate(
+    prompt="A modern app icon with turquoise background and camera symbol",
+    size=ImageSize.SQUARE,      # 1024x1024, LANDSCAPE, or PORTRAIT
+    quality=ImageQuality.HD,     # HD or STANDARD
+    style=ImageStyle.VIVID       # VIVID or NATURAL
+)
+
+# Save the image
+with open("generated_icon.png", "wb") as f:
+    f.write(response["image"])
+
+# Access metadata
+print(f"Image URL: {response['url']}")
+print(f"Revised prompt: {response['revised_prompt']}")
+```
+
+### Edit Existing Images
+
+```python
+# Edit an existing image
+with open("original.png", "rb") as f:
+    original_image = f.read()
+
+response = provider.edit(
+    image=original_image,
+    prompt="Change the background to sunset colors",
+    mask=mask_bytes  # Optional mask for inpainting
+)
+```
+
+### Localized Image Generation
+
+```python
+# Generate app icons with localized text
+locales = {
+    "en": "CleanShots",
+    "ja": "クリーンショット",
+    "es": "FotosLimpias"
+}
+
+for locale, text in locales.items():
+    response = provider.generate(
+        prompt=f"App icon with text '{text}' in {locale} style",
+        size=ImageSize.SQUARE,
+        quality=ImageQuality.HD
+    )
+    # Save localized icon
+    with open(f"icon_{locale}.png", "wb") as f:
+        f.write(response["image"])
+```
+
+### Azure OpenAI Support
+
+```python
+from ai_proxy_core import AzureGPT4oImageProvider
+
+provider = AzureGPT4oImageProvider(
+    api_key="your-azure-key",
+    resource_name="your-resource",
+    deployment_name="dall-e-3"
+)
+```
 
 ## Advanced Usage
 
