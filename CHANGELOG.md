@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.1] - 2025-08-19
+### Changed
+- **BREAKING**: Image generation now requires explicit model selection
+- Renamed `GPT4oImageProvider` to `OpenAIImageProvider` for clarity
+- Added support for GPT-Image-1 model (available now, not April 2025)
+- Removed automatic model fallback - each request must specify the model
+
+### Added
+- `ImageModel` enum for explicit model selection (DALLE_2, DALLE_3, GPT_IMAGE_1)
+- Model-specific parameter validation
+- Token usage tracking for GPT-Image-1
+- Support for GPT-Image-1 4K resolution (4096x4096)
+
+### Fixed
+- GPT-Image-1 response_format parameter handling
+- Model-specific size validation
+- Proper error messages for invalid models
+
 ## [0.4.0] - 2025-08-19
 ### Added
 - **Image Generation Support**: New GPT4oImageProvider for DALL-E 3 image generation

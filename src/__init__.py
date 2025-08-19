@@ -13,15 +13,20 @@ from .providers import (
     OllamaModelProvider,
     GeminiModelProvider
 )
-from .providers.gpt4o_image import (
-    GPT4oImageProvider,
-    AzureGPT4oImageProvider,
-    ImageSize,
-    ImageQuality,
-    ImageStyle
-)
+# Image generation providers
+try:
+    from .providers.openai_image import (
+        OpenAIImageProvider,
+        ImageModel,
+        ImageSize,
+        ImageQuality,
+        ImageStyle
+    )
+except ImportError:
+    # Image providers are optional
+    pass
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __all__ = [
     # Unified completion interface
     "CompletionClient",
@@ -43,9 +48,9 @@ __all__ = [
     "OllamaModelProvider",
     "GeminiModelProvider",
     
-    # Image generation
-    "GPT4oImageProvider",
-    "AzureGPT4oImageProvider",
+    # Image generation (if available)
+    "OpenAIImageProvider",
+    "ImageModel",
     "ImageSize",
     "ImageQuality",
     "ImageStyle",

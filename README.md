@@ -148,77 +148,96 @@ response = await ollama.create_completion(
 
 See [examples/ollama_complete_guide.py](examples/ollama_complete_guide.py) for comprehensive examples including error handling, streaming, and advanced features.
 
-## Image Generation (v0.4.0+)
+## Image Generation (v0.4.1+)
 
-### Generate Images with DALL-E 3
+### Generate Images with Explicit Model Selection
 
 ```python
-from ai_proxy_core import GPT4oImageProvider, ImageSize, ImageQuality, ImageStyle
+from ai_proxy_core import OpenAIImageProvider, ImageModel, ImageSize, ImageQuality, ImageStyle
 
 # Initialize the provider
-provider = GPT4oImageProvider(api_key="your-openai-api-key")
+provider = OpenAIImageProvider(api_key="your-openai-api-key")
 
-# Generate an image
+# Generate with DALL-E 3 (explicitly specify model)
 response = provider.generate(
+    model=ImageModel.DALLE_3,   # Required: specify which model
     prompt="A modern app icon with turquoise background and camera symbol",
-    size=ImageSize.SQUARE,      # 1024x1024, LANDSCAPE, or PORTRAIT
-    quality=ImageQuality.HD,     # HD or STANDARD
-    style=ImageStyle.VIVID       # VIVID or NATURAL
+    size=ImageSize.SQUARE,       # 1024x1024
+    quality=ImageQuality.HD,      # HD or STANDARD
+    style=ImageStyle.VIVID        # VIVID or NATURAL (DALL-E 3 only)
 )
 
-# Save the image
-with open("generated_icon.png", "wb") as f:
-    f.write(response["image"])
+# Generate with GPT-Image-1 (better instruction following)
+response = provider.generate(
+    model=ImageModel.GPT_IMAGE_1,  # Explicitly use GPT-Image-1
+    prompt="Create a detailed app icon following these specifications...",
+    size="4096x4096",              # Supports up to 4K resolution
+    quality="high"                 # low, medium, high, or auto
+)
 
-# Access metadata
-print(f"Image URL: {response['url']}")
-print(f"Revised prompt: {response['revised_prompt']}")
+# Access the generated image
+with open("icon.png", "wb") as f:
+    f.write(response["images"]["data"])
+
+# Token usage for GPT-Image-1
+if response.get("usage"):
+    print(f"Tokens used: {response['usage']['total_tokens']}")
 ```
 
-### Edit Existing Images
+### Available Models
 
 ```python
-# Edit an existing image
-with open("original.png", "rb") as f:
-    original_image = f.read()
+# List available models and their capabilities
+for model in provider.list_models():
+    print(f"Model: {model['id']}")
+    print(f"  Sizes: {model['capabilities']['sizes']}")
+    print(f"  Features: {model['capabilities']['features']}")
 
+# Models:
+# - dall-e-2: Multiple images, editing, 256x256 to 1024x1024
+# - dall-e-3: Styles, HD quality, up to 1792x1024
+# - gpt-image-1: Token pricing, 4K resolution, better instructions
+```
+
+### Edit Images (DALL-E 2 Only)
+
+```python
+# Image editing is only available with DALL-E 2
 response = provider.edit(
-    image=original_image,
-    prompt="Change the background to sunset colors",
-    mask=mask_bytes  # Optional mask for inpainting
+    image=original_image_bytes,
+    prompt="Add a sunset background",
+    model=ImageModel.DALLE_2,  # Only DALL-E 2 supports editing
+    mask=mask_bytes,           # Optional mask for inpainting
+    n=2                        # Generate 2 variations
 )
 ```
 
-### Localized Image Generation
+### Model-Specific Features
 
 ```python
-# Generate app icons with localized text
-locales = {
-    "en": "CleanShots",
-    "ja": "クリーンショット",
-    "es": "FotosLimpias"
-}
+# DALL-E 2: Generate multiple variations
+response = provider.generate(
+    model=ImageModel.DALLE_2,
+    prompt="App icon variations",
+    n=5,  # Generate 5 variations
+    size="512x512"
+)
 
-for locale, text in locales.items():
-    response = provider.generate(
-        prompt=f"App icon with text '{text}' in {locale} style",
-        size=ImageSize.SQUARE,
-        quality=ImageQuality.HD
-    )
-    # Save localized icon
-    with open(f"icon_{locale}.png", "wb") as f:
-        f.write(response["image"])
-```
+# DALL-E 3: Use styles for different aesthetics
+response = provider.generate(
+    model=ImageModel.DALLE_3,
+    prompt="Photorealistic app icon",
+    style=ImageStyle.NATURAL,  # or VIVID
+    quality=ImageQuality.HD
+)
 
-### Azure OpenAI Support
-
-```python
-from ai_proxy_core import AzureGPT4oImageProvider
-
-provider = AzureGPT4oImageProvider(
-    api_key="your-azure-key",
-    resource_name="your-resource",
-    deployment_name="dall-e-3"
+# GPT-Image-1: High resolution with compression
+response = provider.generate(
+    model=ImageModel.GPT_IMAGE_1,
+    prompt="Ultra-detailed 4K app icon",
+    size="4096x4096",
+    quality="high",
+    output_compression=95  # Optional compression
 )
 ```
 
