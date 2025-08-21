@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-proxy-core"
-version = "0.4.1"
+version = "0.4.2"
 authors = [
     {name = "ebowwa", email = "your-email@example.com"},
 ]
@@ -23,7 +23,8 @@ classifiers = [
 dependencies = [
     "google-genai>=0.1.0",
     "pillow>=10.0.0",
-    "aiohttp>=3.8.0",  # For Ollama
+    "aiohttp>=3.8.0", # For Ollama
+    "openai>=1.99.5",
 ]
 keywords = ["ai", "gemini", "llm", "api", "proxy"]
 

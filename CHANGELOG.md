@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2] - 2025-08-21
+### Fixed
+- Fixed OpenAI provider error with 'system_instruction' parameter (Issue #32)
+  - OpenAI provider now properly filters out Gemini-specific parameters
+  - Added parameter exclusion for 'system_instruction' and 'safety_settings'
+  - Ensures cross-provider compatibility when using unified CompletionClient
+
 ## [0.4.1] - 2025-08-19
 ### Changed
 - **BREAKING**: Image generation now requires explicit model selection

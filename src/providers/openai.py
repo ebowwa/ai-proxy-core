@@ -105,8 +105,13 @@ class OpenAICompletions(BaseCompletions):
                     if tool_choice:
                         params["tool_choice"] = tool_choice
                 
+                # Filter out provider-specific parameters that OpenAI doesn't support
+                # These are typically Gemini-specific parameters
+                excluded_params = {'system_instruction', 'safety_settings'}
+                filtered_kwargs = {k: v for k, v in kwargs.items() if k not in excluded_params}
+                
                 # Add any additional kwargs
-                params.update(kwargs)
+                params.update(filtered_kwargs)
                 
                 # Make the API call
                 response = await self.client.chat.completions.create(**params)
