@@ -159,16 +159,18 @@ class GoogleCompletions(BaseCompletions):
     ) -> Dict[str, Any]:
         """Create a completion from messages"""
         
-        # Debug logging
-        print(f"DEBUG: GoogleCompletions received messages: {messages}")
-        print(f"DEBUG: Message types: {[type(m) for m in messages]}")
-        if messages:
-            print(f"DEBUG: First message: {messages[0]}")
-            print(f"DEBUG: First message keys: {list(messages[0].keys()) if isinstance(messages[0], dict) else 'Not a dict'}")
-        
+        logger.debug(f"GoogleCompletions received messages (count={len(messages)})")
         try:
-            # Track request start
-            with self.telemetry.track_duration("completion", {"model": model, "provider": "google"}):
+            client_ctx = kwargs.get("client_context") or {}
+            client_attrs = {
+                "client.app": client_ctx.get("app"),
+                "client.device": client_ctx.get("device"),
+                "client.id": client_ctx.get("client_id"),
+                "client.ip": client_ctx.get("ip"),
+            }
+            base_attrs = {"model": model, "provider": "google"}
+            base_attrs_with_client = {**base_attrs, **{k: v for k, v in client_attrs.items() if v}}
+            with self.telemetry.track_duration("completion", base_attrs_with_client):
                 contents_parts: List[Any] = []
                 for msg in messages:
                     content = msg.get("content", "")
@@ -225,10 +227,9 @@ class GoogleCompletions(BaseCompletions):
                     logger.error(f"Error extracting response: {e}")
                     response_content = str(e)
                 
-                # Increment success counter
                 self.telemetry.request_counter.add(
                     1, 
-                    {"model": model, "status": "success", "provider": "google"}
+                    {**base_attrs_with_client, "status": "success"}
                 )
                 
                 # Return standardized response
@@ -249,10 +250,9 @@ class GoogleCompletions(BaseCompletions):
             
         except Exception as e:
             logger.error(f"Completion error: {e}")
-            # Increment error counter
             self.telemetry.request_counter.add(
                 1, 
-                {"model": model, "status": "error", "provider": "google", "error_type": type(e).__name__}
+                {**base_attrs_with_client, "status": "error", "error_type": type(e).__name__}
             )
             raise
     

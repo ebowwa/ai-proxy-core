@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 @router.websocket("/gemini/ws")
 async def gemini_websocket(websocket: WebSocket):
     """WebSocket endpoint for Gemini Live sessions"""
@@ -30,7 +31,7 @@ async def gemini_websocket(websocket: WebSocket):
             await websocket.send_json({"type": "error", "data": "No API key configured"})
             return
             
-        logger.info(f"API key found: {api_key[:10]}...")
+        logger.info("API key found")
         
         # Create client
         client = genai.Client(
@@ -56,6 +57,37 @@ async def gemini_websocket(websocket: WebSocket):
         ) as session:
             logger.info("Connected to Gemini successfully")
             await websocket.send_json({"type": "system", "data": "Connected to Gemini Live"})
+            client_context = {"app": None, "client_id": None, "device": None, "user_id": None, "session_id": None, "request_id": None, "ip": None}
+            try:
+                scope = websocket.scope or {}
+                raw_headers = scope.get("headers") or []
+                headers = {k.decode().lower(): v.decode() for k, v in raw_headers}
+                xff = headers.get("x-forwarded-for", "")
+                forwarded = headers.get("forwarded", "")
+                x_real_ip = headers.get("x-real-ip", "")
+
+                def parse_forwarded_ip(forwarded_val: str):
+                    for part in forwarded_val.split(","):
+                        for kv in part.split(";"):
+                            k, sep, v = kv.strip().partition("=")
+                            if k.lower() == "for" and sep:
+                                v = v.strip().strip('"').strip("'")
+                                if v.startswith("[") and v.endswith("]"):
+                                    v = v[1:-1]
+                                return v
+                    return None
+                ip = None
+                if xff:
+                    ip = xff.split(",")[0].strip()
+                if not ip and forwarded:
+                    ip = parse_forwarded_ip(forwarded)
+                if not ip and x_real_ip:
+                    ip = x_real_ip.strip()
+                if not ip and websocket.client:
+                    ip = websocket.client.host
+                client_context["ip"] = ip
+            except Exception:
+                pass
             
             # Create tasks for bidirectional communication
             async def receive_from_client():
@@ -67,10 +99,17 @@ async def gemini_websocket(websocket: WebSocket):
                         msg_type = message.get("type")
                         
                         if msg_type == "config":
-                            # Just acknowledge config
+                            data = message.get("data") or message
+                            for key in ("app", "client_id", "device", "user_id", "session_id", "request_id"):
+                                if isinstance(data, dict) and key in data and data.get(key) is not None:
+                                    client_context[key] = data.get(key)
+                            if not client_context.get("client_id") and client_context.get("ip"):
+                                client_context["client_id"] = client_context["ip"]
                             await websocket.send_json({
                                 "type": "config_success",
-                                "message": "Configuration acknowledged"
+                                "message": "Configuration acknowledged",
+                                "client_id": client_context.get("client_id"),
+                                "ip": client_context.get("ip")
                             })
                             
                         elif msg_type in ["text", "message"]:
