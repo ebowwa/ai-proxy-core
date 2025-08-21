@@ -207,17 +207,40 @@ class CompletionClient:
             except Exception as e:
                 logger.warning(f"Could not ensure model {model} is ready: {e}")
         
+        # Handle system_instruction abstraction across providers
+        processed_messages = messages.copy()
+        provider_kwargs = kwargs.copy()
+        
+        if system_instruction:
+            if provider in ["openai", "ollama"]:
+                # For OpenAI and Ollama, prepend system message to messages array
+                system_message = {"role": "system", "content": system_instruction}
+                processed_messages = [system_message] + processed_messages
+                # Don't pass system_instruction as a parameter
+            elif provider == "gemini":
+                # For Gemini, pass as system_instruction parameter
+                provider_kwargs["system_instruction"] = system_instruction
+            elif provider == "anthropic":
+                # For Anthropic/Claude, use 'system' parameter
+                provider_kwargs["system"] = system_instruction
+            else:
+                # For unknown providers, try passing as parameter
+                provider_kwargs["system_instruction"] = system_instruction
+                logger.info(f"Provider {provider} may not support system_instruction parameter")
+        
+        # Handle safety_settings (Gemini-specific)
+        if safety_settings and provider == "gemini":
+            provider_kwargs["safety_settings"] = safety_settings
+        
         # Call the provider's create_completion method
         try:
             result = await provider_instance.create_completion(
-                messages=messages,
+                messages=processed_messages,
                 model=model,
                 temperature=temperature,
                 max_tokens=max_tokens,
                 response_format=response_format,
-                system_instruction=system_instruction,
-                safety_settings=safety_settings,
-                **kwargs
+                **provider_kwargs
             )
             
             return result

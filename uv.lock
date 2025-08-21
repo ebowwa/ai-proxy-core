@@ -9,7 +9,7 @@ resolution-markers = [
 
 [[package]]
 name = "ai-proxy-core"
-version = "0.4.1"
+version = "0.4.3"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.3] - 2025-08-21
+### Added
+- Universal `system_instruction` abstraction across all providers
+  - Automatically converts to provider-specific format (system message for OpenAI/Ollama, parameter for Gemini)
+  - Seamless cross-provider compatibility
+  - No code changes needed - same parameter works everywhere
+
+### Changed
+- CompletionClient now handles system_instruction conversion internally
+- OpenAI provider simplified (no longer needs parameter filtering)
+
 ## [0.4.2] - 2025-08-21
 ### Fixed
 - Fixed OpenAI provider error with 'system_instruction' parameter (Issue #32)
