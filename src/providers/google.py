@@ -88,7 +88,6 @@ class GoogleCompletions(BaseCompletions):
         )
         self.telemetry = get_telemetry()
     
-    
     def _parse_content(self, content: Union[str, List[Dict[str, Any]]]) -> List[Any]:
         if isinstance(content, str):
             return [content]
