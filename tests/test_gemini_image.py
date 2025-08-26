@@ -5,15 +5,23 @@ import pytest
 
 from ai_proxy_core import CompletionClient
 
+run_live = os.getenv("RUN_GEMINI_IMAGE_TESTS") == "1"
+
 requires_key = pytest.mark.skipif(
     not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")),
     reason="GEMINI_API_KEY/GOOGLE_API_KEY not set"
+)
+
+requires_live = pytest.mark.skipif(
+    not run_live,
+    reason="Set RUN_GEMINI_IMAGE_TESTS=1 to run live Gemini image tests"
 )
 
 def data_url_from_bytes(b: bytes, mime="image/jpeg") -> str:
     return f"data:{mime};base64," + base64.b64encode(b).decode("utf-8")
 
 @requires_key
+@requires_live
 @pytest.mark.asyncio
 async def test_routing_to_gemini():
     client = CompletionClient()
@@ -26,6 +34,7 @@ async def test_routing_to_gemini():
     assert resp["model"].startswith("gemini-2.5-flash-image")
 
 @requires_key
+@requires_live
 @pytest.mark.asyncio
 async def test_text_to_image_generates_image():
     client = CompletionClient()
@@ -41,10 +50,11 @@ async def test_text_to_image_generates_image():
     assert img and isinstance(img.get("data"), (bytes, bytearray)) and len(img["data"]) > 0
 
 @requires_key
+@requires_live
 @pytest.mark.asyncio
 async def test_edit_image_returns_image(tmp_path):
-    sample_bytes = b"\xff\xd8\xff\xdb" + os.urandom(128) + b"\xff\xd9"
-    data_url = data_url_from_bytes(sample_bytes, mime="image/jpeg")
+    sample_bytes = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
+    data_url = data_url_from_bytes(sample_bytes, mime="image/png")
     client = CompletionClient()
     resp = await client.create_completion(
         messages=[{"role":"user","content":[
@@ -59,12 +69,13 @@ async def test_edit_image_returns_image(tmp_path):
     assert img and isinstance(img.get("data"), (bytes, bytearray)) and len(img["data"]) > 0
 
 @requires_key
+@requires_live
 @pytest.mark.asyncio
 async def test_multi_image_fusion_returns_image():
-    b1 = b"\xff\xd8\xff\xdb" + os.urandom(128) + b"\xff\xd9"
-    b2 = b"\xff\xd8\xff\xdb" + os.urandom(128) + b"\xff\xd9"
-    data1 = data_url_from_bytes(b1, mime="image/jpeg")
-    data2 = data_url_from_bytes(b2, mime="image/jpeg")
+    b1 = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
+    b2 = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
+    data1 = data_url_from_bytes(b1, mime="image/png")
+    data2 = data_url_from_bytes(b2, mime="image/png")
     client = CompletionClient()
     resp = await client.create_completion(
         messages=[{"role":"user","content":[
@@ -81,6 +92,7 @@ async def test_multi_image_fusion_returns_image():
     assert img and isinstance(img.get("data"), (bytes, bytearray)) and len(img["data"]) > 0
 
 @requires_key
+@requires_live
 @pytest.mark.asyncio
 async def test_nonbreaking_response_shape():
     client = CompletionClient()
