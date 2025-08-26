@@ -17,11 +17,37 @@ requires_live = pytest.mark.skipif(
     reason="Set RUN_GEMINI_IMAGE_TESTS=1 to run live Gemini image tests"
 )
 
+def _is_gemini_image_model_available() -> bool:
+    try:
+        from google import genai  # type: ignore
+        client = genai.Client()
+        try:
+            names = []
+            for m in client.models.list():
+                n = getattr(m, "name", None) or getattr(m, "model", None) or str(m)
+                if isinstance(n, str):
+                    names.append(n)
+            return any("gemini-2.5-flash-image" in n for n in names)
+        except Exception:
+            try:
+                client.models.get(model="models/gemini-2.5-flash-image-preview")
+                return True
+            except Exception:
+                return False
+    except Exception:
+        return False
+
+requires_model = pytest.mark.skipif(
+    not _is_gemini_image_model_available(),
+    reason="Gemini 2.5 Flash Image model not available on this API key/project; requires preview/special access"
+)
+
 def data_url_from_bytes(b: bytes, mime="image/jpeg") -> str:
     return f"data:{mime};base64," + base64.b64encode(b).decode("utf-8")
 
 @requires_key
 @requires_live
+@requires_model
 @pytest.mark.asyncio
 async def test_routing_to_gemini():
     client = CompletionClient()
@@ -35,6 +61,7 @@ async def test_routing_to_gemini():
 
 @requires_key
 @requires_live
+@requires_model
 @pytest.mark.asyncio
 async def test_text_to_image_generates_image():
     client = CompletionClient()
@@ -51,6 +78,7 @@ async def test_text_to_image_generates_image():
 
 @requires_key
 @requires_live
+@requires_model
 @pytest.mark.asyncio
 async def test_edit_image_returns_image(tmp_path):
     sample_bytes = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
@@ -70,6 +98,7 @@ async def test_edit_image_returns_image(tmp_path):
 
 @requires_key
 @requires_live
+@requires_model
 @pytest.mark.asyncio
 async def test_multi_image_fusion_returns_image():
     b1 = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
@@ -93,6 +122,7 @@ async def test_multi_image_fusion_returns_image():
 
 @requires_key
 @requires_live
+@requires_model
 @pytest.mark.asyncio
 async def test_nonbreaking_response_shape():
     client = CompletionClient()

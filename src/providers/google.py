@@ -281,8 +281,18 @@ class GoogleCompletions(BaseCompletions):
                 # Get model name
                 model_name = self.MODEL_MAPPING.get(model, f"models/{model}")
                 
+                if "gemini-2.5-flash-image" in model:
+                    try:
+                        _ = self.client.models.get(model=model_name)
+                    except Exception as availability_err:
+                        raise RuntimeError(
+                            "Gemini 2.5 Flash Image is not available for this API key/project (preview/special access required). "
+                            f"Original error: {availability_err}"
+                        )
+
                 # Generate response
                 response = await self.client.aio.models.generate_content(
+
                     model=model_name,
                     contents=contents,
                     config=config

@@ -9,7 +9,25 @@ def to_data_url(img_path: str) -> str:
     mime = "image/png" if img_path.lower().endswith(".png") else "image/jpeg"
     return f"data:{mime};base64," + base64.b64encode(b).decode("utf-8")
 
+def _gemini_image_available() -> bool:
+    try:
+        from google import genai  # type: ignore
+        client = genai.Client()
+        try:
+            for m in client.models.list():
+                n = getattr(m, "name", None) or str(m)
+                if isinstance(n, str) and "gemini-2.5-flash-image" in n:
+                    return True
+        except Exception:
+            client.models.get(model="models/gemini-2.5-flash-image-preview")
+            return True
+    except Exception:
+        return False
+
 async def main():
+    if not _gemini_image_available():
+        print("Gemini 2.5 Flash Image is not available for this API key/project. This feature requires preview/special access.")
+        return
     client = CompletionClient()
     img1 = os.environ.get("FUSE_IMG1", "sample1.jpg")
     img2 = os.environ.get("FUSE_IMG2", "sample2.jpg")
