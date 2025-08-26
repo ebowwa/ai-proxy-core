@@ -28,7 +28,10 @@ class GoogleCompletions(BaseCompletions):
         "gemini-1.5-flash": "models/gemini-1.5-flash",
         "gemini-1.5-pro": "models/gemini-1.5-pro",
         "gemini-pro": "models/gemini-pro",
-        "gemini-pro-vision": "models/gemini-pro-vision"
+        "gemini-pro-vision": "models/gemini-pro-vision",
+        "gemini-2.5-flash-image-preview": "models/gemini-2.5-flash-image-preview",
+        "gemini-2.5-flash-image": "models/gemini-2.5-flash-image-preview",
+        "g2.5-flash-image": "models/gemini-2.5-flash-image-preview",
     }
     
     def __init__(self, api_key: Optional[str] = None, use_secure_storage: bool = False):
@@ -259,6 +262,23 @@ class GoogleCompletions(BaseCompletions):
                         ))
                     config.safety_settings = safety_config
                 
+                def _is_image_part(p):
+                    try:
+                        import PIL.Image as _PIL
+                        if isinstance(p, _PIL.Image.Image):
+                            return True
+                    except Exception:
+                        pass
+                    return isinstance(p, dict) and isinstance(p.get("mime_type"), str) and p["mime_type"].startswith("image/")
+                
+                wants_images = (
+                    ("gemini-2.5-flash-image" in model) or
+                    bool(kwargs.get("return_images")) or
+                    any(_is_image_part(p) for p in contents_parts if not isinstance(p, str))
+                )
+                if wants_images:
+                    config.response_modalities = ["TEXT", "IMAGE"]
+                
                 # Get model name
                 model_name = self.MODEL_MAPPING.get(model, f"models/{model}")
                 
@@ -269,18 +289,23 @@ class GoogleCompletions(BaseCompletions):
                     config=config
                 )
                 
-                # Extract response content
+                # Extract response content and images
                 response_content = ""
+                image_parts: List[Dict[str, Any]] = []
                 try:
-                    if hasattr(response, 'text') and response.text:
-                        response_content = response.text
-                    elif hasattr(response, 'candidates') and response.candidates:
+                    if hasattr(response, 'candidates') and response.candidates:
                         candidate = response.candidates[0]
                         if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
                             for part in candidate.content.parts:
-                                if hasattr(part, 'text') and part.text:
-                                    response_content = part.text
-                                    break
+                                if getattr(part, "text", None):
+                                    if not response_content:
+                                        response_content = part.text
+                                elif getattr(part, "inline_data", None) and getattr(part.inline_data, "data", None):
+                                    img_bytes = part.inline_data.data
+                                    mime = getattr(part.inline_data, "mime_type", "image/jpeg")
+                                    image_parts.append({"data": img_bytes, "mime_type": mime})
+                    elif hasattr(response, 'text') and response.text:
+                        response_content = response.text
                 except Exception as e:
                     logger.error(f"Error extracting response: {e}")
                     response_content = str(e)
@@ -299,10 +324,11 @@ class GoogleCompletions(BaseCompletions):
                         "index": 0,
                         "message": {
                             "role": "assistant",
-                            "content": response_content
+                            "content": response_content or ""
                         },
                         "finish_reason": "stop"
                     }],
+                    "images": (image_parts[0] if len(image_parts) == 1 else (image_parts if image_parts else None)),
                     "usage": None  # Could be extracted if needed
                 }
             

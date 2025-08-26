@@ -197,6 +197,60 @@ for model in provider.list_models():
 # - dall-e-2: Multiple images, editing, 256x256 to 1024x1024
 # - dall-e-3: Styles, HD quality, up to 1792x1024
 # - gpt-image-1: Token pricing, 4K resolution, better instructions
+### Gemini 2.5 Flash Image (Preview)
+
+```python
+from ai_proxy_core import CompletionClient
+import asyncio, base64, os
+
+async def main():
+    client = CompletionClient()
+    # Text-to-image
+    resp = await client.create_completion(
+        messages=[{"role":"user","content":"Photoreal banana on a desk"}],
+        model="gemini-2.5-flash-image-preview",
+        return_images=True,  # forces image modality even with text-only prompt
+    )
+    img = resp.get("images")
+    if isinstance(img, list):
+        img = img[0] if img else None
+    if img and img.get("data"):
+        with open("gemini_banana.jpg", "wb") as f:
+            f.write(img["data"])
+
+    # Edit (image + instruction)
+    def to_data_url(p):
+        with open(p, "rb") as f: b = f.read()
+        return "data:image/jpeg;base64," + base64.b64encode(b).decode("utf-8")
+
+    messages = [{
+        "role": "user",
+        "content": [
+            {"type":"image_url","image_url":{"url": to_data_url("sample.jpg")}},
+            {"type":"text","text":"Remove the background and add a soft shadow"}
+        ]
+    }]
+    resp = await client.create_completion(
+        messages=messages,
+        model="gemini-2.5-flash-image-preview",
+        return_images=True,
+    )
+    img = resp.get("images")
+    if isinstance(img, list):
+        img = img[0] if img else None
+    if img and img.get("data"):
+        with open("gemini_edit.jpg", "wb") as f:
+            f.write(img["data"])
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+- Response schema remains OpenAI-like and non-breaking:
+  - Text (if any) in `choices[0].message.content`
+  - Image bytes in `response["images"]` (single object) or a list if multiple
+- Aliases: `gemini-2.5-flash-image`, `g2.5-flash-image` route to preview for now
+
 ```
 
 ### Edit Images (DALL-E 2 Only)
