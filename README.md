@@ -197,6 +197,8 @@ for model in provider.list_models():
 # - dall-e-2: Multiple images, editing, 256x256 to 1024x1024
 # - dall-e-3: Styles, HD quality, up to 1792x1024
 # - gpt-image-1: Token pricing, 4K resolution, better instructions
+```
+
 ### Gemini 2.5 Flash Image (Preview)
 
 ```python
@@ -250,8 +252,6 @@ if __name__ == "__main__":
   - Text (if any) in `choices[0].message.content`
   - Image bytes in `response["images"]` (single object) or a list if multiple
 - Aliases: `gemini-2.5-flash-image`, `g2.5-flash-image` route to preview for now
-
-```
 
 ### Edit Images (DALL-E 2 Only)
 
