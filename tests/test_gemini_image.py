@@ -81,7 +81,13 @@ async def test_text_to_image_generates_image():
 @requires_model
 @pytest.mark.asyncio
 async def test_edit_image_returns_image(tmp_path):
-    sample_bytes = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
+    # Create a minimal valid PNG image (1x1 red pixel)
+    from PIL import Image
+    import io
+    img = Image.new('RGB', (10, 10), color='red')
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    sample_bytes = buffer.getvalue()
     data_url = data_url_from_bytes(sample_bytes, mime="image/png")
     client = CompletionClient()
     resp = await client.create_completion(
@@ -101,8 +107,20 @@ async def test_edit_image_returns_image(tmp_path):
 @requires_model
 @pytest.mark.asyncio
 async def test_multi_image_fusion_returns_image():
-    b1 = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
-    b2 = b"\x89PNG\r\n\x1a\n" + os.urandom(128)
+    # Create two minimal valid PNG images with different colors
+    from PIL import Image
+    import io
+    
+    img1 = Image.new('RGB', (10, 10), color='blue')
+    buffer1 = io.BytesIO()
+    img1.save(buffer1, format='PNG')
+    b1 = buffer1.getvalue()
+    
+    img2 = Image.new('RGB', (10, 10), color='green')
+    buffer2 = io.BytesIO()
+    img2.save(buffer2, format='PNG')
+    b2 = buffer2.getvalue()
+    
     data1 = data_url_from_bytes(b1, mime="image/png")
     data2 = data_url_from_bytes(b2, mime="image/png")
     client = CompletionClient()
