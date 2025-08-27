@@ -1,3 +1,9 @@
+## 0.4.4 - Gemini 2.5 Flash Image support
+- Add text-to-image, image edit (image+prompt), and multi-image fusion via unified CompletionClient
+- Model availability checks and graceful skips for tests/examples
+- Non-breaking response: text in choices[0].message.content; images exposed in response["images"]
+- Examples and tests added; README updated
+
 # Changelog
 
 ## [0.4.3] - 2025-08-21

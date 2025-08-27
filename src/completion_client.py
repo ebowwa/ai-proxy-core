@@ -36,6 +36,9 @@ class CompletionClient:
         "gemini-2.5-flash": "gemini",
         "gemini-pro": "gemini", 
         "gemini-pro-vision": "gemini",
+        "gemini-2.5-flash-image-preview": "gemini",
+        "gemini-2.5-flash-image": "gemini",
+        "g2.5-flash-image": "gemini",
         
         # Ollama models (common ones)
         "llama2": "ollama",
