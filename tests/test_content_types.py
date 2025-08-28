@@ -124,13 +124,14 @@ startxref
         content = [
             {"type": "video", "video": {"data": f"data:video/mp4;base64,{video_b64}"}}
         ]
-        
+
         result = self.google_completions._parse_content(content)
-        
+
         assert len(result) == 1
-        assert isinstance(result[0], dict)
-        assert result[0]["mime_type"] == "video/mp4"
-        assert result[0]["data"] == self.sample_video_bytes
+        from google.genai import types
+        assert isinstance(result[0], types.Part)
+        assert result[0].inline_data.mime_type == "video/mp4"
+        assert result[0].inline_data.data == self.sample_video_bytes
 
     def test_video_base64_data_with_explicit_mime(self):
         """Test video parsing with explicit mime_type"""
@@ -138,13 +139,14 @@ startxref
         content = [
             {"type": "video", "video": {"data": video_b64, "mime_type": "video/webm"}}
         ]
-        
+
         result = self.google_completions._parse_content(content)
-        
+
         assert len(result) == 1
-        assert isinstance(result[0], dict)
-        assert result[0]["mime_type"] == "video/webm"
-        assert result[0]["data"] == self.sample_video_bytes
+        from google.genai import types
+        assert isinstance(result[0], types.Part)
+        assert result[0].inline_data.mime_type == "video/webm"
+        assert result[0].inline_data.data == self.sample_video_bytes
 
     def test_video_file_path_mime_detection(self):
         """Test video parsing from file path with MIME type detection"""
@@ -159,9 +161,10 @@ startxref
             result = self.google_completions._parse_content(content)
             
             assert len(result) == 1
-            assert isinstance(result[0], dict)
-            assert result[0]["mime_type"] == "video/mp4"
-            assert result[0]["data"] == self.sample_video_bytes
+            from google.genai import types
+            assert isinstance(result[0], types.Part)
+            assert result[0].inline_data.mime_type == "video/mp4"
+            assert result[0].inline_data.data == self.sample_video_bytes
             
             os.unlink(tmp_file.name)
 
@@ -178,9 +181,10 @@ startxref
             result = self.google_completions._parse_content(content)
             
             assert len(result) == 1
-            assert isinstance(result[0], dict)
-            assert result[0]["mime_type"] == "video/mp4"
-            assert result[0]["data"] == self.sample_video_bytes
+            from google.genai import types
+            assert isinstance(result[0], types.Part)
+            assert result[0].inline_data.mime_type == "video/mp4"
+            assert result[0].inline_data.data == self.sample_video_bytes
             
             os.unlink(tmp_file.name)
 
@@ -272,9 +276,10 @@ startxref
         assert result[1]["mime_type"] == "application/pdf"
         assert result[1]["data"] == self.sample_pdf_bytes
         
-        assert isinstance(result[2], dict)
-        assert result[2]["mime_type"] == "video/mp4"
-        assert result[2]["data"] == self.sample_video_bytes
+        from google.genai import types
+        assert isinstance(result[2], types.Part)
+        assert result[2].inline_data.mime_type == "video/mp4"
+        assert result[2].inline_data.data == self.sample_video_bytes
         
         assert isinstance(result[3], dict)
         assert result[3]["mime_type"] == "text/plain"

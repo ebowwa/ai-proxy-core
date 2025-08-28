@@ -173,7 +173,12 @@ class GoogleCompletions(BaseCompletions):
                         video_bytes = base64.b64decode(video_data["data"])
                         mime_type = video_data.get("mime_type", "video/mp4")
                     
-                    parts.append({"mime_type": mime_type, "data": video_bytes})
+                    parts.append(types.Part(
+                        inline_data=types.Blob(
+                            mime_type=mime_type,
+                            data=video_bytes
+                        )
+                    ))
                 elif "file_path" in video_data:
                     file_path = video_data["file_path"]
                     if os.path.exists(file_path):
@@ -182,7 +187,12 @@ class GoogleCompletions(BaseCompletions):
                         mime_type, _ = mimetypes.guess_type(file_path)
                         if not mime_type or not mime_type.startswith("video/"):
                             mime_type = "video/mp4"
-                        parts.append({"mime_type": mime_type, "data": video_bytes})
+                        parts.append(types.Part(
+                            inlineData=types.Blob(
+                                mimeType=mime_type,
+                                data=video_bytes
+                            )
+                        ))
             elif t == "document":
                 doc_data = item.get("document", {})
                 if "data" in doc_data:
