@@ -1,3 +1,11 @@
+## [0.4.42] - 2025-08-28
+### Fixed
+- Complete fix for Gemini video validation - consistent field naming (PR #37)
+  - Fixed inconsistent camelCase/snake_case in file path video processing
+  - File path inputs now use `inline_data` and `mime_type` (snake_case) 
+  - Ensures consistency with base64 input handling from v0.4.41
+  - Fully resolves Issue #35: Video input fails with Gemini
+
 ## [0.4.41] - 2025-08-28
 ### Fixed
 - Fixed Gemini video content validation error (PR #36)
