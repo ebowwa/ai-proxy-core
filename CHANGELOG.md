@@ -1,3 +1,11 @@
+## [0.4.41] - 2025-08-28
+### Fixed
+- Fixed Gemini video content validation error (PR #36)
+  - Video content now properly wrapped in `types.Part` objects with `inline_data`
+  - Prevents "Extra inputs are not permitted" Pydantic validation errors
+  - Maintains full compatibility with base64 and file path video inputs
+  - Preserves existing MIME type detection logic
+
 ## 0.4.4 - Gemini 2.5 Flash Image support
 - Add text-to-image, image edit (image+prompt), and multi-image fusion via unified CompletionClient
 - Model availability checks and graceful skips for tests/examples
