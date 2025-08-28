@@ -188,8 +188,8 @@ class GoogleCompletions(BaseCompletions):
                         if not mime_type or not mime_type.startswith("video/"):
                             mime_type = "video/mp4"
                         parts.append(types.Part(
-                            inlineData=types.Blob(
-                                mimeType=mime_type,
+                            inline_data=types.Blob(
+                                mime_type=mime_type,
                                 data=video_bytes
                             )
                         ))
