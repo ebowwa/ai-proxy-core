@@ -107,7 +107,13 @@ class GoogleCompletions(BaseCompletions):
                     image = PIL.Image.open(io.BytesIO(image_bytes))
                     parts.append(image)
                 else:
-                    parts.append({"mime_type": "image/jpeg", "data": image_data})
+                    # Assume image_data is base64 if not a data URL
+                    parts.append(types.Part(
+                        inline_data=types.Blob(
+                            mime_type="image/jpeg",
+                            data=base64.b64decode(image_data) if isinstance(image_data, str) else image_data
+                        )
+                    ))
             elif t == "audio_url":
                 audio_data = item.get("audio_url", {}).get("url")
                 if not audio_data or not isinstance(audio_data, str):
@@ -120,7 +126,12 @@ class GoogleCompletions(BaseCompletions):
                     except Exception:
                         pass
                     audio_bytes = base64.b64decode(base64_data)
-                    parts.append({"mime_type": mime, "data": audio_bytes})
+                    parts.append(types.Part(
+                        inline_data=types.Blob(
+                            mime_type=mime,
+                            data=audio_bytes
+                        )
+                    ))
             elif t == "input_audio":
                 audio_obj = item.get("input_audio", {}) if "input_audio" in item else item
                 base64_payload = audio_obj.get("data") or audio_obj.get("base64")
@@ -146,7 +157,12 @@ class GoogleCompletions(BaseCompletions):
                     audio_bytes = base64.b64decode(base64_payload)
                 except Exception:
                     continue
-                parts.append({"mime_type": mime, "data": audio_bytes})
+                parts.append(types.Part(
+                    inline_data=types.Blob(
+                        mime_type=mime,
+                        data=audio_bytes
+                    )
+                ))
             elif t == "pdf":
                 pdf_data = item.get("pdf", {})
                 if "data" in pdf_data:
@@ -155,13 +171,23 @@ class GoogleCompletions(BaseCompletions):
                         pdf_bytes = base64.b64decode(base64_data)
                     else:
                         pdf_bytes = base64.b64decode(pdf_data["data"])
-                    parts.append({"mime_type": "application/pdf", "data": pdf_bytes})
+                    parts.append(types.Part(
+                        inline_data=types.Blob(
+                            mime_type="application/pdf",
+                            data=pdf_bytes
+                        )
+                    ))
                 elif "file_path" in pdf_data:
                     file_path = pdf_data["file_path"]
                     if os.path.exists(file_path):
                         with open(file_path, 'rb') as f:
                             pdf_bytes = f.read()
-                        parts.append({"mime_type": "application/pdf", "data": pdf_bytes})
+                        parts.append(types.Part(
+                        inline_data=types.Blob(
+                            mime_type="application/pdf",
+                            data=pdf_bytes
+                        )
+                    ))
             elif t == "video":
                 video_data = item.get("video", {})
                 if "data" in video_data:
@@ -203,7 +229,12 @@ class GoogleCompletions(BaseCompletions):
                     else:
                         doc_bytes = base64.b64decode(doc_data["data"])
                         mime_type = doc_data.get("mime_type", "text/plain")
-                    parts.append({"mime_type": mime_type, "data": doc_bytes})
+                    parts.append(types.Part(
+                        inline_data=types.Blob(
+                            mime_type=mime_type,
+                            data=doc_bytes
+                        )
+                    ))
                 elif "file_path" in doc_data:
                     file_path = doc_data["file_path"]
                     if os.path.exists(file_path):
@@ -212,7 +243,12 @@ class GoogleCompletions(BaseCompletions):
                             mime_type = "text/plain"
                         with open(file_path, 'rb') as f:
                             doc_bytes = f.read()
-                        parts.append({"mime_type": mime_type, "data": doc_bytes})
+                        parts.append(types.Part(
+                        inline_data=types.Blob(
+                            mime_type=mime_type,
+                            data=doc_bytes
+                        )
+                    ))
         
         return parts
     
