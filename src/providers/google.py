@@ -6,12 +6,15 @@ import base64
 import io
 import logging
 import mimetypes
+import tempfile
+import time
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 
 import PIL.Image
 from google import genai
 from google.genai import types
+import google.generativeai as genai_upload
 
 from .base import BaseCompletions
 from ..telemetry import get_telemetry
@@ -44,6 +47,7 @@ class GoogleCompletions(BaseCompletions):
         """
         self.use_secure_storage = use_secure_storage
         self.key_manager = None
+        self.uploaded_files = []  # Track uploaded files for cleanup
         
         # TODO: Complete secure storage implementation
         # When security module is ready, this will:
@@ -190,7 +194,9 @@ class GoogleCompletions(BaseCompletions):
                     ))
             elif t == "video":
                 video_data = item.get("video", {})
+                # Videos must be uploaded via the File API, not sent inline
                 if "data" in video_data:
+                    # Base64 data - save to temp file and upload
                     if isinstance(video_data["data"], str) and video_data["data"].startswith("data:"):
                         header, base64_data = video_data["data"].split(",", 1)
                         mime_type = header.split("data:")[1].split(";")[0] or "video/mp4"
@@ -199,26 +205,61 @@ class GoogleCompletions(BaseCompletions):
                         video_bytes = base64.b64decode(video_data["data"])
                         mime_type = video_data.get("mime_type", "video/mp4")
                     
-                    parts.append(types.Part(
-                        inline_data=types.Blob(
-                            mime_type=mime_type,
-                            data=video_bytes
-                        )
-                    ))
+                    # Save to temp file
+                    with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp_file:
+                        tmp_file.write(video_bytes)
+                        tmp_path = tmp_file.name
+                    
+                    try:
+                        # Upload to Gemini
+                        genai_upload.configure(api_key=self.api_key)
+                        uploaded_file = genai_upload.upload_file(path=tmp_path, display_name="video.mp4")
+                        
+                        # Wait for file to be processed
+                        while uploaded_file.state.name == "PROCESSING":
+                            time.sleep(0.5)
+                            uploaded_file = genai_upload.get_file(uploaded_file.name)
+                        
+                        if uploaded_file.state.name != "ACTIVE":
+                            raise RuntimeError(f"File upload failed: {uploaded_file.state.name}")
+                        
+                        self.uploaded_files.append(uploaded_file)
+                        # Convert to proper format for genai client
+                        parts.append({
+                            "file_data": {
+                                "file_uri": uploaded_file.uri,
+                                "mime_type": uploaded_file.mime_type
+                            }
+                        })
+                    finally:
+                        os.unlink(tmp_path)
+                        
                 elif "file_path" in video_data:
                     file_path = video_data["file_path"]
                     if os.path.exists(file_path):
-                        with open(file_path, 'rb') as f:
-                            video_bytes = f.read()
-                        mime_type, _ = mimetypes.guess_type(file_path)
-                        if not mime_type or not mime_type.startswith("video/"):
-                            mime_type = "video/mp4"
-                        parts.append(types.Part(
-                            inline_data=types.Blob(
-                                mime_type=mime_type,
-                                data=video_bytes
-                            )
-                        ))
+                        # Upload video file directly
+                        genai_upload.configure(api_key=self.api_key)
+                        uploaded_file = genai_upload.upload_file(
+                            path=file_path,
+                            display_name=os.path.basename(file_path)
+                        )
+                        
+                        # Wait for file to be processed
+                        while uploaded_file.state.name == "PROCESSING":
+                            time.sleep(0.5)
+                            uploaded_file = genai_upload.get_file(uploaded_file.name)
+                        
+                        if uploaded_file.state.name != "ACTIVE":
+                            raise RuntimeError(f"File upload failed: {uploaded_file.state.name}")
+                        
+                        self.uploaded_files.append(uploaded_file)
+                        # Convert to proper format for genai client
+                        parts.append({
+                            "file_data": {
+                                "file_uri": uploaded_file.uri,
+                                "mime_type": uploaded_file.mime_type
+                            }
+                        })
             elif t == "document":
                 doc_data = item.get("document", {})
                 if "data" in doc_data:
@@ -365,6 +406,9 @@ class GoogleCompletions(BaseCompletions):
                     logger.error(f"Error extracting response: {e}")
                     response_content = str(e)
                 
+                # Cleanup uploaded files after response
+                self._cleanup_uploaded_files()
+                
                 self.telemetry.request_counter.add(
                     1, 
                     {**base_attrs_with_client, "status": "success"}
@@ -389,11 +433,22 @@ class GoogleCompletions(BaseCompletions):
             
         except Exception as e:
             logger.error(f"Completion error: {e}")
+            # Cleanup uploaded files on error
+            self._cleanup_uploaded_files()
             self.telemetry.request_counter.add(
                 1, 
                 {**base_attrs_with_client, "status": "error", "error_type": type(e).__name__}
             )
             raise
+    
+    def _cleanup_uploaded_files(self):
+        """Clean up any uploaded files"""
+        for uploaded_file in self.uploaded_files:
+            try:
+                genai_upload.delete_file(uploaded_file.name)
+            except Exception as e:
+                logger.warning(f"Failed to delete uploaded file: {e}")
+        self.uploaded_files.clear()
     
     async def list_models(self) -> List[str]:
         """List available Gemini models from the API"""
